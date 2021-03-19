@@ -1,6 +1,6 @@
 # Project 2: Command Line Shell
 
-Professor: Matthew Malensek
+Professor: Matthew Malensek\
 Author: Marisa Tania  
 
 ## About Jellyfish
