@@ -1,5 +1,6 @@
 # Project 2: Command Line Shell
 
+Professor: Matthew Malensek
 Author: Marisa Tania  
 
 ## About Jellyfish
@@ -8,6 +9,20 @@ Jellyfish is a custom implementation of the Unix command line shell.
 ### What is shell?
 Shell is the outermost layer of the operating system or the command line interface. The sh utility is a command language  interpreter  that  shall  execute
 commands  read  from  a  command  line string, the standard input, or a specified file. To get a better understanding of shell, check out the man page: man sh. 
+
+### Built-In Commands
+Jellyfish shell supports:
+```bash
+Commands:
+    * cd                      To change the CWD. cd without arguments should return to the user’s home directory.
+    * # (comments)            Strings prefixed with # will be ignored by the shell.
+    * history                 Prints the last 100 commands entered with their command numbers.
+    * ! (history execution)   Entering !39 will re-run command number 39.
+    * !!                      Re-runs the last command that was entered. 
+    * !ls                     Re-runs the last command that starts with ‘ls.’
+    * jobs                    To list currently-running background jobs.
+    * exit                    To exit the shell.
+```
 
 ### Functions
 - <b>Basics</b>: Upon startup, Jellyfish will print its prompt and wait for user input. The shell can run commands in both the current directory (with prefix ./) and those in the PATH environment variable. If a command isn’t found, Jellyfish will print an error message. The process exit status is shown as an emoji: a smiling face for success (exit code 0) and a sick face for failure (any nonzero exit code or failure to execute the child process).
@@ -51,7 +66,7 @@ mmalensek
 [🙂]─[10]─[mtania@nemo:/tmp/home/mtania/test]$ pwd
 /tmp/home/mtania/test
 ```
-- <b>Scripting</b>:Support scripting mode to run the test cases. Scripting mode reads commands from standard input and executes them without showing the prompt.
+- <b>Scripting</b>: Support scripting mode to run the test cases. Scripting mode reads commands from standard input and executes them without showing the prompt.
 ```bash
 cat <<EOM | ./crash
 ls /
@@ -67,22 +82,59 @@ hi
 ./crash < commands.txt
 (commands are executed line by line)
 ```
-### Program Options
-Each portion of the display can be toggled with command line options. Here are the options:
+- <b>Signal Handling</b>: Handle the user pressing Ctrl+C and making sure ^C doesn’t terminate the shell. 
 ```bash
-$ ./inspector -h
-Usage: ./inspector [-ahlrst] [-p procfs_dir]
+[🙂]─[11]─[mtania@nemo:~]$ hi there oh wait nevermind^C
 
-Options:
-    * -a              Display all (equivalent to -lrst, default)
-    * -h              Help/usage information
-    * -l              Task List
-    * -p procfs_dir   Change the expected procfs mount point (default: /proc)
-    * -r              Hardware Information
-    * -s              System Information
-    * -t              Task Information
+[🙂]─[11]─[mtania@nemo:~]$ ^C
+
+[🙂]─[11]─[mtania@nemo:~]$ ^C
+
+[🙂]─[11]─[mtania@nemo:~]$ sleep 100
+^C
+
+[🤮]─[12]─[mtania@nemo:~]$ sleep 5
 ```
-The task list, hardware information, system information, and task information can all be turned on/off with the command line options. By default, all of them are displayed.
+- <b>History</b>: In the demo below, the user has entered 142 commands. Only the last 100 are kept, so the list starts at command 43. Blank command would not be shown in the history or increment the command counter. The entire, original command line string is shown in the history – not a tokenized or modified string.
+```bash
+[🙂]─[142]─[mtania@nemo:~]$ history
+  43 ls -l
+  43 top
+  44 echo "hi" # This prints out 'hi'
+
+... (commands removed for brevity) ...
+
+ 140 ls /bin
+ 141 gcc -g crash.c
+ 142 history
+
+```
+- <b>I/O Redirection</b>: Support file input/output redirection.
+```bash
+# Create/overwrite 'my_file.txt' and redirect the output of echo there:
+[🙂]─[14]─[mtania@nemo:~]$ echo "hello world!" > my_file.txt
+[🙂]─[15]─[mtania@nemo:~]$ cat my_file.txt
+hello world!
+
+# Append text with '>>':
+[🙂]─[16]─[mtania@nemo:~]$ echo "hello world!" >> my_file.txt
+[🙂]─[17]─[mtania@nemo:~]$ cat my_file.txt
+hello world!
+hello world!
+
+# Let's sort the /etc/passwd file via input redirection:
+[🙂]─[18]─[mtania@nemo:~]$ sort < /etc/passwd > sorted_pwd.txt
+
+# Order of < and > don't matter:
+[🙂]─[19]─[mtania@nemo:~]$ sort > sorted_pwd.txt < /etc/passwd
+
+# Here's input redirection by itself (not redirecting to a file):
+[🙂]─[20]─[mtania@nemo:~]$ sort < sorted_pwd.txt
+(sorted contents shown)
+```
+- <b>Background Jobs</b>: If a command ends in &, it will run in the background without waiting for the command to finish before prompting for the next command. If user enter jobs, Jellyfish shell will print out a list of currently-running backgrounded processes (the original command line as it was entered, including the & character). The status of background jobs is not shown in the prompt.
+
+- <b>Readline Library</b>: Jellyfish shell's basic “terminal UI.” supports moving through the current command line with arrow keys, backspacing over portions of the command, and even basic file name autocompletion.
 
 ### Included Files
 There are several files included. These are:
@@ -99,44 +151,6 @@ To compile and run:
 ```bash
 make
 ./shell
-```
-
-
-### Program Output
-```bash
-$ ./inspector
-inspector.c:133:main(): Options selected: hardware system task_list task_summary
-
-System Information
-------------------
-Hostname: lunafreya
-Kernel Version: 4.20.3-arch1-1-ARCH
-Uptime: 1 days, 11 hours, 49 minutes, 56 seconds
-
-Hardware Information
-------------------
-CPU Model: AMD EPYC Processor (with IBPB)
-Processing Units: 2
-Load Average (1/5/15 min): 0.00 0.00 0.00
-CPU Usage:    [--------------------] 0.0%
-Memory Usage: [#-------------------] 9.5% (0.1 GB / 1.0 GB)
-
-Task Information
-----------------
-Tasks running: 88
-Since boot:
-    Interrupts: 2153905
-    Context Switches: 3678668
-    Forks: 38849
-
-  PID |        State |                 Task Name |            User | Tasks 
-------+--------------+---------------------------+-----------------+-------
-    1 |     sleeping |                   systemd |               0 | 1 
-    2 |     sleeping |                  kthreadd |               0 | 1 
-    3 |         idle |                    rcu_gp |               0 | 1 
-    4 |         idle |                rcu_par_gp |               0 | 1 
-    6 |         idle |      kworker/0:0H-kblockd |               0 | 1 
-
 ```
 
 ## Testing
