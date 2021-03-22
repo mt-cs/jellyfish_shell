@@ -15,7 +15,7 @@ Jellyfish shell supports:
 ```bash
 Commands:
     * cd                      To change the CWD. cd without arguments should return to the user’s home directory.
-    * # (comments)            Strings prefixed with # will be ignored by the shell.
+    * \# (comments)            Strings prefixed with # will be ignored by the shell.
     * history                 Prints the last 100 commands entered with their command numbers.
     * ! (history execution)   Entering !39 will re-run command number 39.
     * !!                      Re-runs the last command that was entered. 
