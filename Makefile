@@ -7,7 +7,7 @@ LOGGER ?= 1
 # Compiler/linker flags
 CFLAGS += -g -Wall -fPIC -DLOGGER=$(LOGGER)
 LDLIBS += -lm -lreadline
-LDFLAGS +=
+LDFLAGS += -L. -Wl, -rpath='$$ORIGIN'
 
 src=history.c shell.c ui.c
 obj=$(src:.c=.o)

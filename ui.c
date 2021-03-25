@@ -2,6 +2,7 @@
 #include <readline/readline.h>
 #include <locale.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 #include "history.h"
 #include "logger.h"
@@ -11,6 +12,7 @@ static const char *good_str = "😌";
 static const char *bad_str  = "🤯";
 
 static int readline_init(void);
+static bool scripting = false;
 
 void init_ui(void)
 {
@@ -19,8 +21,14 @@ void init_ui(void)
     char *locale = setlocale(LC_ALL, "en_US.UTF-8");
     LOG("Setting locale: %s\n",
             (locale != NULL) ? locale : "could not set locale!");
-
+	if (isatty(STDIN_FILENO) == false) {
+	        LOGP("Entering interactive mode\n");
+	        scripting = true;
+	    } 
+	
     rl_startup_hook = readline_init;
+
+    // do a boolean
 }
 
 void destroy_ui(void)
@@ -89,10 +97,18 @@ unsigned int prompt_cmd_num(void)
 
 char *read_command(void)
 {
-    char *prompt = prompt_line();
-    char *command = readline(prompt);
-    free(prompt);
-    return command;
+	if (scripting == false) {
+		char *prompt = prompt_line();
+	    char *command = readline(prompt);
+	    free(prompt);
+	    return command;
+	} else {
+		// do what we did in class with getline
+		// getline includes the trailing \n (newline) character
+		// but readline DOES NOT!
+		return NULL;
+	}
+    
 }
 
 int readline_init(void)
@@ -119,7 +135,7 @@ int key_up(int count, int key)
     return 0;
 }
 
-int key_down(int count, int key)
+int key_down(int count, int key) // not so useful, count probably 1
 {
     /* Modify the command entry text: */
     rl_replace_line("User pressed 'down' key", 1);
@@ -131,5 +147,6 @@ int key_down(int count, int key)
     // previously). Going past the most recent history command blanks out the
     // command line to allow the user to type a new command.
 
+	// Create a global variable to tracl
     return 0;
 }
