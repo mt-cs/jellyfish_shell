@@ -20,7 +20,10 @@ void hist_add(const char *cmd)
 
 void hist_print(void)
 {
-
+    // When you implement hist_print, be sure to add an fflush(stdout) 
+    //at after you have printed your history list. 
+    //This makes sure everything gets flushed out 
+    //(and most importantly, the test cases that I'm working on will be able to see the full output!)
 }
 
 const char *hist_search_prefix(char *prefix)
@@ -42,3 +45,5 @@ unsigned int hist_last_cnum(void)
     // TODO: Retrieve the most recent command number.
     return 0;
 }
+
+// circular list

@@ -9,7 +9,7 @@
 #include "ui.h"
 
 static const char *good_str = "😌";
-static const char *bad_str  = "🤯";
+static const char *bad_str  = "😱";
 
 static int readline_init(void);
 static bool scripting = false;
@@ -25,10 +25,7 @@ void init_ui(void)
 	        LOGP("Entering interactive mode\n");
 	        scripting = true;
 	    } 
-	
     rl_startup_hook = readline_init;
-
-    // do a boolean
 }
 
 void destroy_ui(void)
@@ -38,7 +35,8 @@ void destroy_ui(void)
 
 char *prompt_line(void)
 {
-    const char *status = prompt_status() ? good_str : bad_str;
+    const char *status = prompt_status() ? bad_str : good_str; 
+    // because, conventionally, programs return 0 when they ran successfully.
 
     char cmd_num[25];
     snprintf(cmd_num, 25, "%d", prompt_cmd_num());
@@ -105,8 +103,24 @@ char *read_command(void)
 	} else {
 		// do what we did in class with getline
 		// getline includes the trailing \n (newline) character
+        // trim off the \n manually on scripting mode
 		// but readline DOES NOT!
-		return NULL;
+        /*Since the readline library we’re using for the shell UI is intended for interactive use, 
+        you will need to switch to a traditional input reading function 
+        such as getline when operating in scripting mode.
+        When implementing scripting mode, you will likely need 
+        to close stdin on the child process if your call to exec() fails. 
+        This prevents infinite loops.*/
+        char *line= NULL;
+        size_t line_sz = 0;
+        ssize_t read_sz = getline(&line, &line_sz, stdin);
+        if (read_sz == -1) {
+            perror("getline");
+            return NULL;
+        }
+        line[read_sz - 1] = '\0';
+        LOG("got a command: %s", line);
+		return line;
 	}
     
 }
