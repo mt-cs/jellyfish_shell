@@ -13,7 +13,7 @@
 #include "logger.h"
 #include "ui.h"
 #include "elist.h"
-
+// make util.c, update MakeFile
 char *next_token(char **str_ptr, const char *delim)
 {
     if (*str_ptr == NULL) {
@@ -57,7 +57,7 @@ int main(void)
     init_ui();
 
     char *command = NULL;
-    struct elist *list = elist_create(0, sizeof(char *)); 
+    struct elist *list = elist_create(0, sizeof(char **)); 
     
     signal(SIGINT, SIG_IGN);
 
@@ -87,13 +87,39 @@ int main(void)
         }
         // 3. check for built-in functions
         // just an example
-        if (command[0] == '#') { 
-            printf("comment!\n");
+        // if (command[0] == '#') { 
+        //     printf("comment!!\n");
+        // } 
+        char **first = elist_get(list, 0);
+
+        if (strcmp(*first, "#") == 0) { 
+            printf("comment!!\n");
         } 
+      
+        if (!strcmp(*first, "cd")){
+            char **directory = elist_get(list, 1);
+            chdir(*directory);
+            if(chdir(*directory) == -1)
+            {
+                fprintf(stderr, "vsh: Error changing directory\n");
+            }
+
+        }      
+        /*
+        cd to change the CWD. cd without arguments should return to the user’s home directory.
+        # (comments): strings prefixed with # will be ignored by the shell
+        history, which prints the last 100 commands entered with their command numbers
+        ! (history execution): entering !39 will re-run command number 39, and !! re-runs the last command that was entered. !ls re-runs the last command that starts with ‘ls.’ Note that command numbers are NOT the same as the array positions; e.g., you may have 100 history elements, with command numbers 600 – 699.
+        jobs to list currently-running background jobs.
+        exit to exit the shell.
+        */
+
         // 4. preprocess command (before redirection "<>>", background "&")
         // this is the place to do pre-processing on the command line
         // if we have a > character in the tokens:
         //      open the file that came after the >
+
+        
         
 
         // 5. fork a child process
@@ -103,6 +129,11 @@ int main(void)
         } else if (child == 0) {
             /* I am the child */
             char **args = elist_get(list, 0);
+
+            // Use dup2 to achieve this; 
+            // right before the newly-created child process calls execvp, 
+            // you will open the appropriate files and set up redirection with dup2.
+
         //      dup2(fd, fileno(stdout))
             execvp(args[0], args);
             perror("execvp");

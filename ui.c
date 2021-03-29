@@ -3,6 +3,7 @@
 #include <locale.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <limits.h>
 
 #include "history.h"
 #include "logger.h"
@@ -70,12 +71,24 @@ char *prompt_line(void)
 
 char *prompt_username(void)
 {
-    return "unknown_user";
+    char *username = getlogin();
+    if (username == NULL) {
+        return "unknown_user"; //TODO: warning: unused variable ‘i’ [-Wunused-variable] i = 0
+    }
+
+    return username;
 }
 
 char *prompt_hostname(void)
 {
-    return "unknown_host";
+    char host_name[HOST_NAME_MAX + 1];
+    //host_name[HOST_NAME_MAX] = '\0';
+    int h = gethostname(host_name, sizeof(host_name));
+    char *host = host_name;
+    if (h == -1) {
+        return "unknown_hostname";
+    }
+    return host;
 }
 
 char *prompt_cwd(void)
