@@ -6,6 +6,7 @@ void hist_init(unsigned int limit)
 {
     // TODO: set up history data structures, with 'limit' being the maximum
     // number of entries maintained.
+    
 }
 
 void hist_destroy(void)

@@ -81,7 +81,7 @@ char *prompt_username(void)
 
 char *prompt_hostname(void)
 {
-    char host_name[HOST_NAME_MAX + 1];
+    char host_name[HOST_NAME_MAX + 1]; //why + 1?
     //host_name[HOST_NAME_MAX] = '\0';
     int h = gethostname(host_name, sizeof(host_name));
     char *host = host_name;
@@ -93,7 +93,16 @@ char *prompt_hostname(void)
 
 char *prompt_cwd(void)
 {
-    return "/unknown/path";
+    char cwd[PATH_MAX];
+    char *direct = getcwd(cwd, sizeof(cwd));
+    if (direct == NULL) {
+        perror("getcwd() error");
+        //return "/unknown/path";
+    } else {
+        LOG("current working directory is: %s\n", cwd);
+    }
+    char *pcwd = cwd;
+    return pcwd; 
 }
 
 int prompt_status(void)
@@ -135,7 +144,6 @@ char *read_command(void)
         LOG("got a command: %s", line);
 		return line;
 	}
-    
 }
 
 int readline_init(void)

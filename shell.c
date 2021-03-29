@@ -67,13 +67,14 @@ int main(void)
             break;
         }
 
-        LOG("Input command: %s ", command);
+        LOG("Input command: %s\n", command);
         // 1. tokenize command
         char *next_tok = command;
         char *curr_tok;
+
         // 2. add each token to a list
         while ((curr_tok = next_token(&next_tok, " \t\n")) != NULL) {
-            printf("adding: %s\n", curr_tok);
+            LOG("adding: %s\n", curr_tok);
             elist_add(list, &curr_tok);
         }
         char *null = (char *) 0;
@@ -92,10 +93,12 @@ int main(void)
         // } 
         char **first = elist_get(list, 0);
 
+        // # (comments): strings prefixed with # will be ignored by the shell
         if (strcmp(*first, "#") == 0) { 
-            printf("comment!!\n");
+            LOGP("comment!!\n");
         } 
-      
+
+        // cd to change the CWD. cd without arguments should return to the user’s home directory.
         if (!strcmp(*first, "cd")){
             char **directory = elist_get(list, 1);
             chdir(*directory);
@@ -103,11 +106,14 @@ int main(void)
             {
                 fprintf(stderr, "vsh: Error changing directory\n");
             }
+        } 
 
-        }      
-        /*
-        cd to change the CWD. cd without arguments should return to the user’s home directory.
-        # (comments): strings prefixed with # will be ignored by the shell
+        if (!strcmp(*first, "history")){
+            LOGP("history");
+        }
+
+
+        /*  
         history, which prints the last 100 commands entered with their command numbers
         ! (history execution): entering !39 will re-run command number 39, and !! re-runs the last command that was entered. !ls re-runs the last command that starts with ‘ls.’ Note that command numbers are NOT the same as the array positions; e.g., you may have 100 history elements, with command numbers 600 – 699.
         jobs to list currently-running background jobs.
@@ -133,26 +139,26 @@ int main(void)
             // Use dup2 to achieve this; 
             // right before the newly-created child process calls execvp, 
             // you will open the appropriate files and set up redirection with dup2.
-
         //      dup2(fd, fileno(stdout))
-            execvp(args[0], args);
-            perror("execvp");
+            if(execvp(args[0], args) == -1) {
+                perror("execvp");
+                close(fileno(stdin));
+                close(fileno(stdout));
+                close(fileno(stderr));
+                exit(1);
+            }
             exit(0);
         } else {
             /* I am the parent */
             int status; //synchronize the processes
             wait(&status);
-            printf("Child finished executing: %d\n", status);
+            LOG("Child finished executing: %d\n", status);
             elist_clear(list);
         }
         // 6. execute whatever command the user asked for
-
-        
-        
         /* We are done with command; free it */
         free(command);
     }
-
     return 0;
 }
 
