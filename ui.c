@@ -15,6 +15,11 @@ static const char *bad_str  = "😱";
 static int readline_init(void);
 static bool scripting = false;
 
+
+static char host_name[HOST_NAME_MAX + 1];
+
+
+// create static variable, if null set it up, if not null free it
 void init_ui(void)
 {
     LOGP("Initializing UI...\n");
@@ -73,7 +78,7 @@ char *prompt_username(void)
 {
     char *username = getlogin();
     if (username == NULL) {
-        return "unknown_user"; //TODO: warning: unused variable ‘i’ [-Wunused-variable] i = 0
+        return "unknown_user"; 
     }
 
     return username;
@@ -81,33 +86,30 @@ char *prompt_username(void)
 
 char *prompt_hostname(void)
 {
-    char host_name[HOST_NAME_MAX + 1]; //why + 1?
-    //host_name[HOST_NAME_MAX] = '\0';
+    host_name[HOST_NAME_MAX] = '\0';
     int h = gethostname(host_name, sizeof(host_name));
-    char *host = host_name;
     if (h == -1) {
         return "unknown_hostname";
     }
-    return host;
+    return host_name;
 }
 
 char *prompt_cwd(void)
 {
-    char cwd[PATH_MAX];
-    char *direct = getcwd(cwd, sizeof(cwd));
-    if (direct == NULL) {
-        perror("getcwd() error");
-        //return "/unknown/path";
+    static char *cwd = NULL;
+    // if cwd exist
+    // free it
+    if (cwd != NULL) {
+        free(cwd);
     } else {
-        LOG("current working directory is: %s\n", cwd);
+        cwd = getcwd(NULL, 0);;
     }
-    char *pcwd = cwd;
-    return pcwd; 
+    return cwd; 
 }
 
 int prompt_status(void)
 {
-    return -1;
+    return 0; // -1 bad face
 }
 
 unsigned int prompt_cmd_num(void)

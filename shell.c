@@ -13,44 +13,7 @@
 #include "logger.h"
 #include "ui.h"
 #include "elist.h"
-// make util.c, update MakeFile
-char *next_token(char **str_ptr, const char *delim)
-{
-    if (*str_ptr == NULL) {
-        return NULL;
-    }
-
-    size_t tok_start = strspn(*str_ptr, delim);
-    size_t tok_end = strcspn(*str_ptr + tok_start, delim);
-
-    /* Zero length token. We must be finished. */
-    if (tok_end  == 0) {
-        *str_ptr = NULL;
-        return NULL;
-    }
-
-    /* Take note of the start of the current token. We'll return it later. */
-    char *current_ptr = *str_ptr + tok_start;
-
-    /* Shift pointer forward (to the end of the current token) */
-    *str_ptr += tok_start + tok_end;
-
-    if (**str_ptr == '\0') {
-        /* If the end of the current token is also the end of the string, we
-         * must be at the last token. */
-        *str_ptr = NULL;
-    } else {
-        /* Replace the matching delimiter with a NUL character to terminate the
-         * token string. */
-        **str_ptr = '\0';
-
-        /* Shift forward one character over the newly-placed NUL so that
-         * next_pointer now points at the first character of the next token. */
-        (*str_ptr)++;
-    }
-
-    return current_ptr;
-}
+#include "util.h"
 
 int main(void)
 {
@@ -64,6 +27,7 @@ int main(void)
     while (true) {
         command = read_command();
         if (command == NULL) {
+            free(command);
             break;
         }
 
@@ -72,6 +36,7 @@ int main(void)
         char *next_tok = command;
         char *curr_tok;
 
+        elist_clear(list);
         // 2. add each token to a list
         while ((curr_tok = next_token(&next_tok, " \t\n")) != NULL) {
             LOG("adding: %s\n", curr_tok);
@@ -93,13 +58,16 @@ int main(void)
         // } 
         char **first = elist_get(list, 0);
 
+        if (first[0] == NULL ){
+            continue;
+        }
         // # (comments): strings prefixed with # will be ignored by the shell
         if (strcmp(*first, "#") == 0) { 
             LOGP("comment!!\n");
         } 
 
         // cd to change the CWD. cd without arguments should return to the user’s home directory.
-        if (!strcmp(*first, "cd")){
+        else if (!strcmp(*first, "cd")){
             char **directory = elist_get(list, 1);
             chdir(*directory);
             if(chdir(*directory) == -1)
@@ -107,26 +75,40 @@ int main(void)
                 fprintf(stderr, "vsh: Error changing directory\n");
             }
         } 
-
-        if (!strcmp(*first, "history")){
+        //history, which prints the last 100 commands entered with their command numbers
+        else if (!strcmp(*first, "history")){
             LOGP("history");
         }
-
-
         /*  
-        history, which prints the last 100 commands entered with their command numbers
-        ! (history execution): entering !39 will re-run command number 39, and !! re-runs the last command that was entered. !ls re-runs the last command that starts with ‘ls.’ Note that command numbers are NOT the same as the array positions; e.g., you may have 100 history elements, with command numbers 600 – 699.
-        jobs to list currently-running background jobs.
-        exit to exit the shell.
+        ! (history execution): entering !39 will re-run command number 39, 
+        and !! re-runs the last command that was entered. 
+        !ls re-runs the last command that starts with ‘ls.’ 
+        Note that command numbers are NOT the same as the array positions; 
+        e.g., you may have 100 history elements, with command numbers 600 – 699.
         */
+        else if (!strcmp(*first, "!")){
+            LOGP("history execution");
+        }
+        else if (!strcmp(*first, "!!")){
+            LOGP("re-runs the last command that was entered.");
+        }
+        else if (!strcmp(*first, "!ls")){
+            LOGP("re-runs the last command that starts with ‘ls.’ ");
+        }
+        // jobs to list currently-running background jobs.
+        else if (!strcmp(*first, "jobs")){
+            LOGP("history");
+        }
+        // exit to exit the shell.
+        else if (!strcmp(*first, "exit")){
+            LOGP("exit");
+        }
 
         // 4. preprocess command (before redirection "<>>", background "&")
         // this is the place to do pre-processing on the command line
         // if we have a > character in the tokens:
         //      open the file that came after the >
 
-        
-        
 
         // 5. fork a child process
         pid_t child = fork();
@@ -139,7 +121,35 @@ int main(void)
             // Use dup2 to achieve this; 
             // right before the newly-created child process calls execvp, 
             // you will open the appropriate files and set up redirection with dup2.
-        //      dup2(fd, fileno(stdout))
+            // example:
+            // echo hello > /tmp/test_file
+            // put hello in /tmp/test_file (after the >)
+            // dup2(fd, fileno(stdout))
+            ssize_t index = elist_index_of(list, ">");
+            if(index != -1) { // means > is in token
+                
+                int open_flags = O_RDWR | O_CREAT | O_TRUNC;
+
+                /**
+                 * These are the file permissions we see when doing an `ls -l`: we can
+                * restrict access to the file. 0666 is octal notation for allowing all file
+                * permissions, which is then modified by the user's 'umask.'
+                */
+                int open_perms = 0666;
+
+                int fd = open(args[index + 1], open_flags, open_perms);
+                if (fd == -1) {
+                    perror("open");
+                    return 1;
+                }
+
+                if (dup2(fd, fileno(stdout)) == -1) { // take stdin and stick it to fd
+                    perror("dup2");
+                    return 1;
+                }
+
+            }
+
             if(execvp(args[0], args) == -1) {
                 perror("execvp");
                 close(fileno(stdin));
@@ -157,6 +167,7 @@ int main(void)
         }
         // 6. execute whatever command the user asked for
         /* We are done with command; free it */
+       
         free(command);
     }
     return 0;
