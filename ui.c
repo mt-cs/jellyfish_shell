@@ -15,10 +15,6 @@ static const char *bad_str  = "😱";
 static int readline_init(void);
 static bool scripting = false;
 
-
-static char host_name[HOST_NAME_MAX + 1];
-
-
 // create static variable, if null set it up, if not null free it
 void init_ui(void)
 {
@@ -86,11 +82,8 @@ char *prompt_username(void)
 
 char *prompt_hostname(void)
 {
-    host_name[HOST_NAME_MAX] = '\0';
-    int h = gethostname(host_name, sizeof(host_name));
-    if (h == -1) {
-        return "unknown_hostname";
-    }
+    static char host_name[HOST_NAME_MAX + 1] = { 0 };
+    gethostname(host_name, sizeof(host_name));
     return host_name;
 }
 
