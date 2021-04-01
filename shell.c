@@ -8,12 +8,108 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <limits.h>
 
 #include "history.h"
 #include "logger.h"
 #include "ui.h"
 #include "elist.h"
 #include "util.h"
+
+/*
+  Function Declarations for builtin shell commands:
+ */
+int jellyfish_cd(char **args);
+int jellyfish_history(char **args);
+int jellyfish_history_execution(char **args);
+int jellyfish_jobs(char **args);
+int jellyfish_exit();
+int jellyfish_comments(char **args);
+
+int num_builtins();
+
+char *builtin_str[] = {
+    "cd",
+    "#",
+    "history",
+    "!",
+    "jobs",
+    "exit"
+};
+
+int (*builtin_func[]) (char **) = {
+    &jellyfish_cd,
+    &jellyfish_comments,
+    &jellyfish_history,
+    &jellyfish_history_execution,
+    &jellyfish_jobs,
+    &jellyfish_exit
+};
+
+int jellyfish_comments(char **args){
+    return 0;
+}
+
+int jellyfish_history(char **args) {
+    return 0;
+}
+
+int jellyfish_history_execution(char **args) {
+    return 0;
+}
+
+int jellyfish_jobs(char **args) {
+    return 0;
+}
+
+int jellyfish_cd(char **args)
+{
+    if (*args == NULL) {
+		chdir(getenv("HOME")); 
+		return 1;
+	}
+	// Else we change the directory to the one specified by the 
+	// argument, if possible
+	else{ 
+		if (chdir(*args) == -1) {
+			printf(" %s: no such directory\n", *args);
+            return -1;
+		}
+	}
+	return 0;
+}
+
+int jellyfish_exit() {
+    LOGP("exit\n");
+    return 0;
+}
+
+int jellyfish_execute(char **args)
+{
+    int i;
+
+    if (args[0] == NULL) {
+        return 1;
+    }
+
+    // if (!strcmp(*args, "exit")){
+    //     LOGP("exit\n");
+    //     return 0;
+    // }
+
+    for (i = 0; i < num_builtins(); i++) {
+        if (strcmp(*args, builtin_str[i]) == 0) {
+            return (*builtin_func[i])(args);
+        }
+    }
+    return 0;
+    //return jellyfish_launch(args);
+}
+
+int num_builtins() {
+    return sizeof(builtin_str) / sizeof(char *);
+}
+
 
 int main(void)
 {
@@ -39,6 +135,15 @@ int main(void)
         elist_clear(list);
         // 2. add each token to a list
         while ((curr_tok = next_token(&next_tok, " \t\n")) != NULL) {
+            char *comment = malloc(sizeof(char));
+            strncpy(comment, curr_tok, 1);
+
+            // ignore comment
+            if ((strcmp(curr_tok, "#") == 0) || (strcmp(comment, "#") == 0)) { 
+                free(comment);
+                break;
+            } 
+            
             LOG("adding: %s\n", curr_tok);
             elist_add(list, &curr_tok);
         }
@@ -61,47 +166,43 @@ int main(void)
         if (first[0] == NULL ){
             continue;
         }
+
+        //jellyfish_execute(first);
         // # (comments): strings prefixed with # will be ignored by the shell
-        if (strcmp(*first, "#") == 0) { 
-            LOGP("comment!!\n");
-        } 
+        
 
         // cd to change the CWD. cd without arguments should return to the user’s home directory.
-        else if (!strcmp(*first, "cd")){
-            char **directory = elist_get(list, 1);
-            chdir(*directory);
-            if(chdir(*directory) == -1)
-            {
-                fprintf(stderr, "vsh: Error changing directory\n");
-            }
+        if (!strcmp(*first, "cd")){
+            jellyfish_cd(first);
         } 
-        //history, which prints the last 100 commands entered with their command numbers
-        else if (!strcmp(*first, "history")){
-            LOGP("history");
-        }
-        /*  
-        ! (history execution): entering !39 will re-run command number 39, 
-        and !! re-runs the last command that was entered. 
-        !ls re-runs the last command that starts with ‘ls.’ 
-        Note that command numbers are NOT the same as the array positions; 
-        e.g., you may have 100 history elements, with command numbers 600 – 699.
-        */
-        else if (!strcmp(*first, "!")){
-            LOGP("history execution");
-        }
-        else if (!strcmp(*first, "!!")){
-            LOGP("re-runs the last command that was entered.");
-        }
-        else if (!strcmp(*first, "!ls")){
-            LOGP("re-runs the last command that starts with ‘ls.’ ");
-        }
-        // jobs to list currently-running background jobs.
-        else if (!strcmp(*first, "jobs")){
-            LOGP("history");
-        }
+        // //history, which prints the last 100 commands entered with their command numbers
+        // else if (!strcmp(*first, "history")){
+        //     LOGP("history");
+        // }
+        // /*  
+        // ! (history execution): entering !39 will re-run command number 39, 
+        // and !! re-runs the last command that was entered. 
+        // !ls re-runs the last command that starts with ‘ls.’ 
+        // Note that command numbers are NOT the same as the array positions; 
+        // e.g., you may have 100 history elements, with command numbers 600 – 699.
+        // */
+        // else if (!strcmp(*first, "!")){
+        //     LOGP("history execution");
+        // }
+        // else if (!strcmp(*first, "!!")){
+        //     LOGP("re-runs the last command that was entered.");
+        // }
+        // else if (!strcmp(*first, "!ls")){
+        //     LOGP("re-runs the last command that starts with ‘ls.’ ");
+        // }
+        // // jobs to list currently-running background jobs.
+        // else if (!strcmp(*first, "jobs")){
+        //     LOGP("history");
+        // }
         // exit to exit the shell.
         else if (!strcmp(*first, "exit")){
-            LOGP("exit");
+            LOGP("exit\n");
+            return 0;
         }
 
         // 4. preprocess command (before redirection "<>>", background "&")
@@ -140,14 +241,13 @@ int main(void)
                 int fd = open(args[index + 1], open_flags, open_perms);
                 if (fd == -1) {
                     perror("open");
-                    return 1;
+                    //return 1;
                 }
 
-                if (dup2(fd, fileno(stdout)) == -1) { // take stdin and stick it to fd
+                if (dup2(fd, fileno(stdout)) == -1) { 
                     perror("dup2");
-                    return 1;
+                    //return 1;
                 }
-
             }
 
             if(execvp(args[0], args) == -1) {
@@ -162,12 +262,12 @@ int main(void)
             /* I am the parent */
             int status; //synchronize the processes
             wait(&status);
+            set_status(status);
             LOG("Child finished executing: %d\n", status);
             elist_clear(list);
         }
         // 6. execute whatever command the user asked for
         /* We are done with command; free it */
-       
         free(command);
     }
     return 0;

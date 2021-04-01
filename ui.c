@@ -4,11 +4,13 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <limits.h>
-
+#include <unistd.h>
 #include "history.h"
 #include "logger.h"
 #include "ui.h"
 
+int status_num;
+int cmd_num;
 static const char *good_str = "😌";
 static const char *bad_str  = "😱";
 
@@ -33,6 +35,7 @@ void init_ui(void)
 void destroy_ui(void)
 {
     // TODO cleanup code, if necessary
+
 }
 
 char *prompt_line(void)
@@ -66,7 +69,7 @@ char *prompt_line(void)
             user,
             host,
             cwd);
-
+    free(cwd);
     return prompt_str;
 }
 
@@ -92,27 +95,36 @@ char *prompt_cwd(void)
     static char *cwd = NULL;
     // if cwd exist
     // free it
-    if (cwd != NULL) {
-        free(cwd);
-    } else {
-        cwd = getcwd(NULL, 0);;
-    }
+    // if (cwd != NULL) {
+    //     free(cwd);
+    //     LOGP("free cwd");
+    // } else {
+    //     cwd = getcwd(NULL, 0);;
+    // }
+    cwd = getcwd(NULL, 0);;
     return cwd; 
+}
+
+int set_status(int status) {
+    status_num = status;
+    LOG("status: %d\n", status_num);
+    return 0;
 }
 
 int prompt_status(void)
 {
-    return 0; // -1 bad face
+    return status_num;
 }
 
 unsigned int prompt_cmd_num(void)
 {
-    return 0;
+    return cmd_num;
 }
 
 char *read_command(void)
 {
 	if (scripting == false) {
+        cmd_num++;
 		char *prompt = prompt_line();
 	    char *command = readline(prompt);
 	    free(prompt);

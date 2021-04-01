@@ -55,6 +55,11 @@ char *prompt_cwd(void);
 int prompt_status(void);
 
 /**
+ * setter for status
+ */
+int set_status(int status);
+
+/**
  * Retrieves the current command number being composed by the user, starting
  * with 1. The command number will also be reflected in the shell history.
  *
