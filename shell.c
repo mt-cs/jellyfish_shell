@@ -19,36 +19,10 @@
 /*
   Function Declarations for builtin shell commands:
  */
-int jellyfish_cd(char **args);
+void jellyfish_cd(char **args);
 int jellyfish_history(char **args);
 int jellyfish_history_execution(char **args);
 int jellyfish_jobs(char **args);
-int jellyfish_exit();
-int jellyfish_comments(char **args);
-
-int num_builtins();
-
-char *builtin_str[] = {
-    "cd",
-    "#",
-    "history",
-    "!",
-    "jobs",
-    "exit"
-};
-
-int (*builtin_func[]) (char **) = {
-    &jellyfish_cd,
-    &jellyfish_comments,
-    &jellyfish_history,
-    &jellyfish_history_execution,
-    &jellyfish_jobs,
-    &jellyfish_exit
-};
-
-int jellyfish_comments(char **args){
-    return 0;
-}
 
 int jellyfish_history(char **args) {
     return 0;
@@ -62,54 +36,19 @@ int jellyfish_jobs(char **args) {
     return 0;
 }
 
-int jellyfish_cd(char **args)
+void jellyfish_cd(char **dir)
 {
-    if (*args == NULL) {
-		chdir(getenv("HOME")); 
-		return 1;
-	}
-	// Else we change the directory to the one specified by the 
-	// argument, if possible
-	else{ 
-		if (chdir(*args) == -1) {
-			printf(" %s: no such directory\n", *args);
-            return -1;
-		}
-	}
-	return 0;
-}
-
-int jellyfish_exit() {
-    LOGP("exit\n");
-    return 0;
-}
-
-int jellyfish_execute(char **args)
-{
-    int i;
-
-    if (args[0] == NULL) {
-        return 1;
+    LOGP("changeDir");
+    chdir(*dir);
+    if (*dir == NULL) {
+        chdir(getenv("HOME")); 
     }
-
-    // if (!strcmp(*args, "exit")){
-    //     LOGP("exit\n");
-    //     return 0;
-    // }
-
-    for (i = 0; i < num_builtins(); i++) {
-        if (strcmp(*args, builtin_str[i]) == 0) {
-            return (*builtin_func[i])(args);
+    else { 
+        if (chdir(*dir) == -1) {
+            LOGP(" %s: no such directory\n");
         }
     }
-    return 0;
-    //return jellyfish_launch(args);
 }
-
-int num_builtins() {
-    return sizeof(builtin_str) / sizeof(char *);
-}
-
 
 int main(void)
 {
@@ -138,12 +77,12 @@ int main(void)
             char *comment = malloc(sizeof(char));
             strncpy(comment, curr_tok, 1);
 
-            // ignore comment
+            // # (comments): strings prefixed with # will be ignored by the shell
             if ((strcmp(curr_tok, "#") == 0) || (strcmp(comment, "#") == 0)) { 
                 free(comment);
                 break;
             } 
-            
+
             LOG("adding: %s\n", curr_tok);
             elist_add(list, &curr_tok);
         }
@@ -157,23 +96,17 @@ int main(void)
             continue;
         }
         // 3. check for built-in functions
-        // just an example
-        // if (command[0] == '#') { 
-        //     printf("comment!!\n");
-        // } 
-        char **first = elist_get(list, 0);
+       
+        char **comm = elist_get(list, 0);
 
-        if (first[0] == NULL ){
+        if (comm[0] == NULL ){
             continue;
         }
-
-        //jellyfish_execute(first);
-        // # (comments): strings prefixed with # will be ignored by the shell
         
-
         // cd to change the CWD. cd without arguments should return to the user’s home directory.
-        if (!strcmp(*first, "cd")){
-            jellyfish_cd(first);
+        if (!strcmp(*comm, "cd")){
+            char **dir = elist_get(list, 1);
+            jellyfish_cd(dir);
         } 
         // //history, which prints the last 100 commands entered with their command numbers
         // else if (!strcmp(*first, "history")){
@@ -200,7 +133,7 @@ int main(void)
         //     LOGP("history");
         // }
         // exit to exit the shell.
-        else if (!strcmp(*first, "exit")){
+        else if (!strcmp(*comm, "exit")){
             LOGP("exit\n");
             return 0;
         }
