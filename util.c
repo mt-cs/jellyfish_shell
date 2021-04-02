@@ -50,5 +50,6 @@ void sigint_handler(int signo) {
      */
     printf("\n");
     printf("Goodbye 👋 🙃!\n");
+    
     exit(0);
 }

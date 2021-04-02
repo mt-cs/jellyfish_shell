@@ -8,11 +8,13 @@
 #include "history.h"
 #include "logger.h"
 #include "ui.h"
+#include <sys/types.h>
+#include <pwd.h>
 
 int status_num;
 int cmd_num;
 static const char *good_str = "😌";
-static const char *bad_str  = "😱";
+static const char *bad_str  = "🤮";
 
 static int readline_init(void);
 static bool scripting = false;
@@ -69,7 +71,7 @@ char *prompt_line(void)
             user,
             host,
             cwd);
-    free(cwd);
+   
     return prompt_str;
 }
 
@@ -93,15 +95,25 @@ char *prompt_hostname(void)
 char *prompt_cwd(void)
 {
     static char *cwd = NULL;
-    // if cwd exist
-    // free it
-    // if (cwd != NULL) {
-    //     free(cwd);
-    //     LOGP("free cwd");
-    // } else {
-    //     cwd = getcwd(NULL, 0);;
-    // }
-    cwd = getcwd(NULL, 0);;
+    if (cwd != NULL) {
+        free(cwd);
+        LOGP("free cwd\n");
+    } 
+    cwd = getcwd(NULL, 0);
+    //return cwd;
+    /* if the CWD is the user’s home directory, then the entire path is replaced with ~. 
+    Subdirectories under the home directory are prefixed with ~; 
+    if I am in /home/mmalensek/test, the prompt will show ~/test*/
+    struct passwd *pw = getpwuid(getuid());
+    const char *homedir = pw->pw_dir;
+    LOG("Current user dir: %s\n", homedir);
+    
+    if (strncmp(homedir, cwd, strlen(homedir)) == 0) {
+        char *new_cwd = cwd + strlen(homedir) - 1;
+        new_cwd[0] = '~';
+        LOG("New cwd: %s\n", new_cwd);
+        return new_cwd; 
+    }
     return cwd; 
 }
 
@@ -110,7 +122,7 @@ int set_status(int status) {
     LOG("status: %d\n", status_num);
     return 0;
 }
-
+ 
 int prompt_status(void)
 {
     return status_num;
@@ -130,16 +142,6 @@ char *read_command(void)
 	    free(prompt);
 	    return command;
 	} else {
-		// do what we did in class with getline
-		// getline includes the trailing \n (newline) character
-        // trim off the \n manually on scripting mode
-		// but readline DOES NOT!
-        /*Since the readline library we’re using for the shell UI is intended for interactive use, 
-        you will need to switch to a traditional input reading function 
-        such as getline when operating in scripting mode.
-        When implementing scripting mode, you will likely need 
-        to close stdin on the child process if your call to exec() fails. 
-        This prevents infinite loops.*/
         char *line= NULL;
         size_t line_sz = 0;
         ssize_t read_sz = getline(&line, &line_sz, stdin);
