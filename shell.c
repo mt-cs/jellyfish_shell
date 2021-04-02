@@ -101,6 +101,7 @@ int main(void)
         else if (!strcmp(*comm, "exit")){
             LOGP("exit\n");
             return 0;
+            //TODO: there is a function exit that can be called from anywhere but it might cause memory leak
         }
         // //history, which prints the last 100 commands entered with their command numbers
         // else if (!strcmp(*first, "history")){
@@ -134,8 +135,6 @@ int main(void)
         // if we have a > character in the tokens:
         //      open the file that came after the >
         
-        
-
 
         // 5. fork a child process
         pid_t child = fork();
@@ -144,8 +143,8 @@ int main(void)
         } else if (child == 0) {
             /* I am the child */
             char **args = elist_get(list, 0);
-            LOG("args is: %s", *args);
-            LOGP(args[0]);
+            LOG("args is: %s\n", *args);
+            LOG("args[0] is: %s\n", args[0]);
             // Use dup2 to achieve this; 
             // right before the newly-created child process calls execvp, 
             // you will open the appropriate files and set up redirection with dup2.
@@ -155,8 +154,8 @@ int main(void)
             
             ssize_t index = elist_index_of(list, ">");
             if(index != -1) { // means > is in token
-                // replace with " "
                 args[index] = 0;
+                // replace with " "
                 // elist_set(list, index, "");
                 // args = elist_get(list, 0);
                 int open_flags = O_RDWR | O_CREAT | O_TRUNC;
