@@ -19,15 +19,15 @@ static const char *bad_str  = "🤮";
 static int readline_init(void);
 static bool scripting = false;
 
-// create static variable, if null set it up, if not null free it
 void init_ui(void)
 {
     LOGP("Initializing UI...\n");
 
-    char *locale = setlocale(LC_ALL, "en_US.UTF-8");
+    char *locale = setlocale(LC_ALL, "en_US.UTF-8"); //set or query the program's current locale
+    // LC_ALL for all of the locale.
     LOG("Setting locale: %s\n",
-            (locale != NULL) ? locale : "could not set locale!");
-	if (isatty(STDIN_FILENO) == false) {
+            (locale != NULL) ? locale : "could not set locale!"); // If locale is NULL, the current locale is only queried, not modified.
+	if (isatty(STDIN_FILENO) == false) { // test whether a file descriptor refers to a terminal
 	        LOGP("Entering interactive mode\n");
 	        scripting = true;
 	    } 
@@ -100,10 +100,6 @@ char *prompt_cwd(void)
         LOGP("free cwd\n");
     } 
     cwd = getcwd(NULL, 0);
-    //return cwd;
-    /* if the CWD is the user’s home directory, then the entire path is replaced with ~. 
-    Subdirectories under the home directory are prefixed with ~; 
-    if I am in /home/mmalensek/test, the prompt will show ~/test*/
     struct passwd *pw = getpwuid(getuid());
     const char *homedir = pw->pw_dir;
     LOG("Current user dir: %s\n", homedir);

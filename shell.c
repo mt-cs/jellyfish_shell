@@ -76,10 +76,15 @@ int main(void)
                 break;
             } 
             LOG("adding: %s\n", curr_tok);
-            elist_add(list, &curr_tok);
+            elist_add(list, &curr_tok); // &curr_tok we are copying the pointers to the cahar arrays, instead of just the first char array
         }
-        char *null = (char *) 0;
-        elist_add(list, &null);
+        char *null = (char *) 0; // set a null char and append it to the end of list
+        elist_add(list, &null); // we terminate the list of token with null
+        // the way execvp knows that we are at the end of the list of tokens (argument) of the command
+        // is when it hits a null. we are doing it in a funky way because that's how we deign our elist
+        // we pass a pointer into something and we memcpy it into place
+        // ls -l / null
+        
         LOG("Processed %zu tokens\n", elist_size(list));
 
         if (elist_size(list) == 1) {
@@ -142,7 +147,9 @@ int main(void)
             perror("fork");
         } else if (child == 0) {
             /* I am the child */
-            char **args = elist_get(list, 0);
+            // args is pointing at the start of an array of pointer
+             // if we change the list in anyway the original args will not be valid anymore
+            char **args = elist_get(list, 0); // we get the first element, we will dump args to execvp
             LOG("args is: %s\n", *args);
             LOG("args[0] is: %s\n", args[0]);
             // Use dup2 to achieve this; 
@@ -152,12 +159,32 @@ int main(void)
             // echo hello > /tmp/test_file
             // put hello in /tmp/test_file (after the >)
             
-            ssize_t index = elist_index_of(list, ">");
+            //ssize_t index = elist_index_of(list, ">");
+            ssize_t index = -1;
+            
+            //loop through the args
+            for (int i = 0; i < elist_size(list) - 1; ++i) {
+                LOG("args[i] = %s\n", args[i]);
+                if (strcmp(args[i], ">") == 0) {
+                    index = i;
+                    LOG("Index > is: %ld\n", index);
+                    LOG("Args > at index is: %s\n", args[index]);
+                    break;
+                } else if (strcmp(args[i], "<") == 0) {
+                    index = i;
+                    LOG("Index < is: %ld\n", index);
+                    LOG("Args < at index is: %s\n", args[index]);
+                    break;
+                } else {
+                    LOGP("We are in the else clause\n");
+                }
+            }
+
+            LOG("Index now is: %ld\n", index);
+            char **redirect = elist_get(list, index);
+            LOG("redirect inside if is %s\n", *redirect);
             if(index != -1) { // means > is in token
                 args[index] = 0;
-                // replace with " "
-                // elist_set(list, index, "");
-                // args = elist_get(list, 0);
                 int open_flags = O_RDWR | O_CREAT | O_TRUNC;
 
                 /**
@@ -172,27 +199,42 @@ int main(void)
                     perror("open");
                     return 1;
                 }
-                dup2(fd, fileno(stdout));
-                if (dup2(fd, fileno(stdout)) == -1) { 
-                    perror("dup2");
-                    return 1;
-                }
+                
+                LOG("redirect inside if is %s\n", *redirect);
+                if ((strcmp(*redirect, ">") == 0)) {
+                    dup2(fd, fileno(stdout));
+                    if (dup2(fd, fileno(stdout)) == -1) { 
+                        perror("dup2");
+                        return 1;
+                    }
+                } else if ((strcmp(*redirect, "<") == 0)) {
+                    dup2(fd, fileno(stdin));
+                    if (dup2(fd, fileno(stdin)) == -1) { 
+                        perror("dup2");
+                        return 1;
+                    }
+                }       
+            } else{
+                LOGP("No > or < token");
             }
-            if(execvp(args[0], args) == -1) {
-                perror("execvp");
+
+            
+
+            if(execvp(args[0], args) == -1) { // dump args to execvp
+                perror("execvp"); // this will only execute if execvp fail
                 close(fileno(stdin));
                 close(fileno(stdout));
                 close(fileno(stderr));
                 exit(1);
             }
-            exit(0);
+            exit(0); // why exit(0) shell 194?
         } else {
             /* I am the parent */
             int status; //synchronize the processes
             wait(&status);
             set_status(status);
             LOG("Child finished executing: %d\n", status);
-            elist_clear(list);
+            elist_clear(list); // if we don't have the parent waiting for the child anymore, that's effectively a background job
         }
         // 6. execute whatever command the user asked for
         /* We are done with command; free it */
