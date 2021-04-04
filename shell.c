@@ -161,62 +161,117 @@ int main(void)
             
             //ssize_t index = elist_index_of(list, ">");
             ssize_t index = -1;
-            
-            //loop through the args
+
             for (int i = 0; i < elist_size(list) - 1; ++i) {
-                LOG("args[i] = %s\n", args[i]);
+
                 if (strcmp(args[i], ">") == 0) {
                     index = i;
-                    LOG("Index > is: %ld\n", index);
-                    LOG("Args > at index is: %s\n", args[index]);
-                    break;
-                } else if (strcmp(args[i], "<") == 0) {
-                    index = i;
-                    LOG("Index < is: %ld\n", index);
-                    LOG("Args < at index is: %s\n", args[index]);
-                    break;
-                } else {
-                    LOGP("We are in the else clause\n");
-                }
-            }
+                    int open_flags = O_RDWR | O_CREAT | O_TRUNC;
 
-            LOG("Index now is: %ld\n", index);
-            char **redirect = elist_get(list, index);
-            LOG("redirect inside if is %s\n", *redirect);
-            if(index != -1) { // means > is in token
-                args[index] = 0;
-                int open_flags = O_RDWR | O_CREAT | O_TRUNC;
+                    int open_perms = 0666;
 
-                /**
-                * These are the file permissions we see when doing an `ls -l`: we can
-                * restrict access to the file. 0666 is octal notation for allowing all file
-                * permissions, which is then modified by the user's 'umask.'
-                */
-                int open_perms = 0666;
-
-                int fd = open(args[index + 1], open_flags, open_perms);
-                if (fd == -1) {
-                    perror("open");
-                    return 1;
-                }
-                
-                LOG("redirect inside if is %s\n", *redirect);
-                if ((strcmp(*redirect, ">") == 0)) {
+                    int fd = open(args[index + 1], open_flags, open_perms);
+                    if (fd == -1) {
+                        perror("open");
+                        return 1;
+                    }
                     dup2(fd, fileno(stdout));
-                    if (dup2(fd, fileno(stdout)) == -1) { 
+                    if(dup2(fd, fileno(stdout)) == -1) {
                         perror("dup2");
                         return 1;
                     }
-                } else if ((strcmp(*redirect, "<") == 0)) {
-                    dup2(fd, fileno(stdin));
-                    if (dup2(fd, fileno(stdin)) == -1) { 
-                        perror("dup2");
-                        return 1;
+
+                } else if (strcmp(args[i], ">>") == 0){
+                    index = i;
+
+                    int open_flags = O_RDWR | O_CREAT | O_APPEND;   //---> changed to O_APPEND
+                        int open_perms = 0666;
+                    
+                        int fd = open(args[index + 1], open_flags, open_perms);
+                        if (fd == -1) {
+                            perror("open");
+                            return 1;
+                        }
+
+                        if (dup2(fd, fileno(stdout)) == -1) {
+                            perror("dup2");
+                            return 1;
                     }
-                }       
-            } else{
-                LOGP("No > or < token");
+
+                } else if (strcmp(args[i], "<") == 0){
+                    index = i;
+
+                    int open_flags = O_RDWR | O_CREAT | O_TRUNC;  
+                        int open_perms = 0666;
+                    
+                        int fd = open(args[index + 1], open_flags, open_perms);
+                        if (fd == -1) {
+                            perror("open");
+                            return 1;
+                        }
+
+                        if (dup2(fd, fileno(stdin)) == -1) {
+                            perror("dup2");
+                            return 1;
+                        }
+                }
+            
             }
+
+            //loop through the args
+            // for (int i = 0; i < elist_size(list) - 1; ++i) {
+            //     LOG("args[i] = %s\n", args[i]);
+            //     if (strcmp(args[i], ">") == 0) {
+            //         index = i;
+            //         LOG("Index > is: %ld\n", index);
+            //         LOG("Args > at index is: %s\n", args[index]);
+            //         break;
+            //     } else if (strcmp(args[i], "<") == 0) {
+            //         index = i;
+            //         LOG("Index < is: %ld\n", index);
+            //         LOG("Args < at index is: %s\n", args[index]);
+            //         break;
+            //     } else {
+            //         LOGP("We are in the else clause\n");
+            //     }
+            // }
+
+            // LOG("Index now is: %ld\n", index);
+            // char **redirect = elist_get(list, index);
+            // LOG("redirect inside if is %s\n", *redirect);
+            // if(index != -1) { // means > is in token
+            //     args[index] = 0;
+            //     int open_flags = O_RDWR | O_CREAT | O_TRUNC;
+            //     /**
+            //     * These are the file permissions we see when doing an `ls -l`: we can
+            //     * restrict access to the file. 0666 is octal notation for allowing all file
+            //     * permissions, which is then modified by the user's 'umask.'
+            //     */
+            //     int open_perms = 0666;
+
+            //     int fd = open(args[index + 1], open_flags, open_perms);
+            //     if (fd == -1) {
+            //         perror("open");
+            //         return 1;
+            //     }
+                
+            //     LOG("redirect inside if is %s\n", *redirect);
+            //     if ((strcmp(*redirect, ">") == 0)) {
+            //         dup2(fd, fileno(stdout));
+            //         if (dup2(fd, fileno(stdout)) == -1) { 
+            //             perror("dup2");
+            //             return 1;
+            //         }
+            //     } else if ((strcmp(*redirect, "<") == 0)) {
+            //         dup2(fd, fileno(stdin));
+            //         if (dup2(fd, fileno(stdin)) == -1) { 
+            //             perror("dup2");
+            //             return 1;
+            //         }
+            //     }       
+            // } else{
+            //     LOGP("No > or < token");
+            // }
 
             
 
