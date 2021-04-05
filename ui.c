@@ -102,12 +102,12 @@ char *prompt_cwd(void)
     cwd = getcwd(NULL, 0);
     struct passwd *pw = getpwuid(getuid());
     const char *homedir = pw->pw_dir;
-    LOG("Current user dir: %s\n", homedir);
+    //LOG("Current user dir: %s\n", homedir);
     
     if (strncmp(homedir, cwd, strlen(homedir)) == 0) {
         char *new_cwd = cwd + strlen(homedir) - 1;
         new_cwd[0] = '~';
-        LOG("New cwd: %s\n", new_cwd);
+        //LOG("New cwd: %s\n", new_cwd);
         return new_cwd; 
     }
     return cwd; 
@@ -167,7 +167,7 @@ int key_up(int count, int key)
 
     /* Move the cursor to the end of the line: */
     rl_point = rl_end;
-
+    // iter
     // TODO: step back through the history until no more history entries are
     // left. Once the end of the history is reached, stop updating the command
     // line.
@@ -182,7 +182,7 @@ int key_down(int count, int key) // not so useful, count probably 1
 
     /* Move the cursor to the end of the line: */
     rl_point = rl_end;
-
+    // iter rev
     // TODO: step forward through the history (assuming we have stepped back
     // previously). Going past the most recent history command blanks out the
     // command line to allow the user to type a new command.

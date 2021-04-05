@@ -89,8 +89,8 @@ int jellyfish_io(int index, char **args, bool append, bool write, bool read) {
                 return 1;
             }    
         } else if (read) {
-            open_flags = O_RDONLY | O_CREAT | O_TRUNC;
-            fd = open(args[index + 1], open_flags, open_perms);
+            open_flags = O_RDONLY;
+            fd = open(args[index + 1], open_flags);
             LOG("Filename < read: %s\n", args[index + 1]);
             dup2(fd, fileno(stdin));
             if (dup2(fd, fileno(stdin)) == -1) { 
@@ -179,10 +179,12 @@ int main(void)
         // }
         // else if (!strcmp(*first, "!ls")){
         //     LOGP("re-runs the last command that starts with ‘ls.’ ");
+        
         // }
         // // jobs to list currently-running background jobs.
         // else if (!strcmp(*first, "jobs")){
         //     LOGP("history");
+
         // }
         
         
@@ -205,9 +207,7 @@ int main(void)
             // LOG("args is: %s\n", *args);
             // LOG("args[0] is: %s\n", args[0]);
 
-            bool write = false;
-            bool read = false;
-            bool append = false;
+            
             
             //ssize_t index = elist_index_of(list, ">");
             ssize_t index = -1;
@@ -215,41 +215,26 @@ int main(void)
             //loop through the args
             
             for (int i = 0; i < elist_size(list) - 1; ++i) {
+                bool write = false;
+                bool read = false;
+                bool append = false;
                 if (strcmp(args[i], ">") == 0) {
                     index = i;
                     write = true;
-                    break;
+                    jellyfish_io(index, args, append, write, read);
+                    LOGP ("we are in >\n");
                 } else if (strcmp(args[i], "<") == 0) {
                     index = i;
                     read = true;
-                    break;
+                    jellyfish_io(index, args, append, write, read);
+                    LOGP ("we are in <\n");
                 } else if (strcmp(args[i], ">>") == 0) {
                     index = i;
                     append = true;
-                    break;
+                    jellyfish_io(index, args, append, write, read);
+                    LOGP ("we are in >>\n");
                 }
-
-                // while (strcmp(args[i], ">") == 0) {
-                //     index = i;
-                //     write = true;
-                //     jellyfish_io(index, args, append, write, read);
-                //     //break;
-                // } 
-                // while (strcmp(args[i], "<") == 0) {
-                //     jellyfish_io(index, args, append, write, read);
-                //     index = i;
-                //     read = true;
-                //     //break;
-                // } 
-                // while (strcmp(args[i], ">>") == 0) {
-                //     jellyfish_io(index, args, append, write, read);
-                //     index = i;
-                //     append = true;
-                //     //break;
-                // }
-            }
-            jellyfish_io(index, args, append, write, read);
-                
+            }   
             if(execvp(args[0], args) == -1) { // dump args to execvp
                 perror("execvp"); // this will only execute if execvp fail
                 close(fileno(stdin));

@@ -21,7 +21,7 @@ libshell.so: $(obj)
 	$(CC) $(CFLAGS) $(LDLIBS) $(LDFLAGS) $(obj) -shared -o $@
 
 shell.o: shell.c history.h logger.h ui.h util.h
-history.o: history.c history.h logger.h
+history.o: history.c history.h logger.h clist.h
 ui.o: ui.h ui.c logger.h history.h
 util.o: util.h logger.h
 
