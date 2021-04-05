@@ -150,28 +150,19 @@ int main(void)
             // args is pointing at the start of an array of pointer
              // if we change the list in anyway the original args will not be valid anymore
             char **args = elist_get(list, 0); // we get the first element, we will dump args to execvp
-            LOG("args is: %s\n", *args);
-            LOG("args[0] is: %s\n", args[0]);
+            // LOG("args is: %s\n", *args);
+            // LOG("args[0] is: %s\n", args[0]);
 
             bool write = false;
             bool read = false;
             bool append = false;
-            // bool red_stdin = true;
-            // bool redirect = true;
-            
-            // Use dup2 to achieve this; 
-            // right before the newly-created child process calls execvp, 
-            // you will open the appropriate files and set up redirection with dup2.
-            // example:
-            // echo hello > /tmp/test_file
-            // put hello in /tmp/test_file (after the >)
             
             //ssize_t index = elist_index_of(list, ">");
             ssize_t index = -1;
 
             //loop through the args
             for (int i = 0; i < elist_size(list) - 1; ++i) {
-                LOG("args[i] = %s\n", args[i]);
+                // LOG("args[i] = %s\n", args[i]);
                 if (strcmp(args[i], ">") == 0) {
                     index = i;
                     write = true;
@@ -197,11 +188,12 @@ int main(void)
             if(index != -1) { // means > < >> is in token
                 args[index] = 0;
                 int open_perms = 0666;
+                int open_flags;
+                int fd;
                 if (append) {
-                    int open_flags = O_RDWR | O_CREAT | O_APPEND;
-                    LOGP ("appending....\n");
-                    int fd = open(args[index + 1], open_flags, open_perms);
-                    LOG("Filename: %s\n", args[index + 1]);
+                    open_flags = O_RDWR | O_CREAT | O_APPEND;
+                    fd = open(args[index + 1], open_flags, open_perms);
+                    LOG("Filename >> append: %s\n", args[index + 1]);
                     if (fd == -1) {
                         perror("open");
                         return 1;
@@ -211,34 +203,34 @@ int main(void)
                         perror("dup2");
                         return 1;
                     }    
-
-                } else { 
-                    int open_flags = O_RDWR | O_CREAT | O_TRUNC;
+                } else if (write) { 
+                    open_flags = O_RDWR | O_CREAT | O_TRUNC;
                     /**
                     * These are the file permissions we see when doing an `ls -l`: we can
                     * restrict access to the file. 0666 is octal notation for allowing all file
                     * permissions, which is then modified by the user's 'umask.'
                     */
-                    int fd = open(args[index + 1], open_flags, open_perms);
-                    LOG("Filename: %s\n", args[index + 1]);
+                    fd = open(args[index + 1], open_flags, open_perms);
+                    LOG("Filename > write: %s\n", args[index + 1]);
                     if (fd == -1) {
                         perror("open");
                         return 1;
                     }
-                    if (write) {
-                        dup2(fd, fileno(stdout));
-                        if (dup2(fd, fileno(stdout)) == -1) { 
-                            perror("dup2");
-                            return 1;
-                        }    
-                    } else if (read) {
-                        dup2(fd, fileno(stdin));
-                        if (dup2(fd, fileno(stdin)) == -1) { 
-                            perror("dup2");
-                            return 1;
-                        }
-                    }       
-                } 
+                    dup2(fd, fileno(stdout));
+                    if (dup2(fd, fileno(stdout)) == -1) { 
+                        perror("dup2");
+                        return 1;
+                    }    
+                } else if (read) {
+                    open_flags = O_RDONLY | O_CREAT | O_TRUNC;
+                    fd = open(args[index + 1], open_flags, open_perms);
+                    LOG("Filename < read: %s\n", args[index + 1]);
+                    dup2(fd, fileno(stdin));
+                    if (dup2(fd, fileno(stdin)) == -1) { 
+                        perror("dup2");
+                        return 1;
+                    }
+                }       
             }    
                 
             if(execvp(args[0], args) == -1) { // dump args to execvp
@@ -263,9 +255,5 @@ int main(void)
     elist_destroy(list);
     return 0;
 }
-
-/* call dup2, sigchld*/
-/* our shell is an unkillable process 
- * ignore sigint */
 
 
