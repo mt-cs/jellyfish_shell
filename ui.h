@@ -56,6 +56,8 @@ int prompt_status(void);
 
 /**
  * setter for status
+ * 
+ * @return 0 on success, nonzero otherwise
  */
 int set_status(int status);
 

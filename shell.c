@@ -1,3 +1,7 @@
+/**
+ * @file
+ */
+
 #include <fcntl.h>
 #include <pwd.h>
 #include <stdbool.h>

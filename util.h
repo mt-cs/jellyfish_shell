@@ -1,3 +1,7 @@
+/**
+ * @file
+ */
+
 #ifndef _UTIL_H_
 #define _UTIL_H_
 
@@ -13,7 +17,7 @@
  *
  * - delim: the set of characters to use as delimiters
  *
- * Returns: char pointer to the next token in the string.
+ * @return char pointer to the next token in the string.
  */
 char *next_token(char **str_ptr, const char *delim);
 

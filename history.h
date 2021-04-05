@@ -61,6 +61,8 @@ const char *hist_search_cnum(int command_number);
 /**
  * Retrieves the 'command number' of the last command. Note that this is *NOT*
  * the array index, but rather the monotonically increasing command number.
+ * 
+ * @return 0 on success, nonzero otherwise
  */
 unsigned int hist_last_cnum(void);
 

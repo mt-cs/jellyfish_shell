@@ -1,3 +1,7 @@
+/**
+ * @file
+ */
+
 #include <stdio.h>
 #include <readline/readline.h>
 #include <locale.h>
@@ -44,7 +48,6 @@ char *prompt_line(void)
 {
     const char *status = prompt_status() ? bad_str : good_str; 
     // because, conventionally, programs return 0 when they ran successfully.
-
     char cmd_num[25];
     snprintf(cmd_num, 25, "%d", prompt_cmd_num());
 

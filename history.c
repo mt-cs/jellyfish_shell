@@ -1,5 +1,8 @@
-#include <stddef.h>
+/**
+ * @file
+ */
 
+#include <stddef.h>
 #include "history.h"
 #include "clist.h"
 #include <limits.h>

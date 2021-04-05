@@ -1,3 +1,7 @@
+/**
+ * @file
+ */
+
 #ifndef _CLIST_H_
 #define _CLIST_H_
 
@@ -8,22 +12,29 @@ struct clist_iterator;
 
 /**
  * Creates a new circular list with the given capacity and item size.
+ * @param capacity Number of item to retaim
+ * @param item_size size of the item
+ * @return new clist struct
  */
 struct clist *clist_create(size_t capacity, size_t item_sz);
 
 /**
  * Creates a new clist iterator.
+ * @return new clist iterator
  */
 struct clist_iterator clist_create_iter(void);
 
 /**
  * Cleans up data structures and any memory associated with the provided clist
+ * @param list The clist to be destroyed
  */
 void clist_destroy(struct clist *list);
 
 /**
  * Adds a new element to the list by copying the contents pointed to by 'item'
  * into the next available space in the list.
+ * @param list The clist to be added
+ * @param item item to be added
  */
 ssize_t clist_add(struct clist *list, void *item);
 
@@ -31,6 +42,7 @@ ssize_t clist_add(struct clist *list, void *item);
  * 'Adds' a new element by returning a pointer to the next available space in
  * the list. The element is not cleared, so it may point to
  * previously-initialized data.
+ * @param list The clist to be added
  */
 void *clist_add_new(struct clist *list);
 
@@ -38,6 +50,8 @@ void *clist_add_new(struct clist *list);
  * Retrieves element at the provided index, or NULL if not found. Note that this
  * is *NOT* the array index, but rather the circular index (for example, one
  * might retrieve index 682 from a circular list that only stores 5 elements).
+ * @param list the origin clist
+ * @param idx index to be retrieved
  */
 void *clist_get(struct clist *list, size_t idx);
 
@@ -46,6 +60,8 @@ void *clist_get(struct clist *list, size_t idx);
  * and working backward until the end of the list is reached. Each invocation of
  * the function retrieves the next element, with NULL indicating the end of the
  * list has been reached. 'iter' is used to track state through the iteration.
+ * @param list clist
+ * @param iter clist_iterator
  */
 void *clist_iterate(struct clist *list, struct clist_iterator *iter);
 
@@ -54,6 +70,8 @@ void *clist_iterate(struct clist *list, struct clist_iterator *iter);
  * element and proceeding forward to the beginning (most recent) element of the
  * list.  NULL indicates the start of the list has been reached. 'iter' is used
  * to track state through the iteration.
+ * @param list clist
+ * @param iter clist_iterator
  */
 void *clist_iterate_rev(struct clist *list, struct clist_iterator *iter);
 
