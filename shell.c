@@ -23,6 +23,7 @@ void jellyfish_cd(char **args);
 int jellyfish_history(char **args);
 int jellyfish_history_execution(char **args);
 int jellyfish_jobs(char **args);
+int jellyfish_io(int index, char **args, bool append, bool write, bool read);
 
 int jellyfish_history(char **args) {
     return 0;
@@ -48,6 +49,57 @@ void jellyfish_cd(char **dir)
             LOGP("no such directory\n");
         }
     }
+}
+
+int jellyfish_io(int index, char **args, bool append, bool write, bool read) {
+    if(index != -1) { // means > < >> is in token
+        args[index] = 0;
+        int open_perms = 0666;
+        int open_flags;
+        int fd;
+        if (append) {
+            open_flags = O_RDWR | O_CREAT | O_APPEND;
+            fd = open(args[index + 1], open_flags, open_perms);
+            LOG("Filename >> append: %s\n", args[index + 1]);
+            if (fd == -1) {
+                perror("open");
+                return 1;
+            }
+            dup2(fd, fileno(stdout));
+            if (dup2(fd, fileno(stdout)) == -1) { 
+                perror("dup2");
+                return 1;
+            }    
+        } else if (write) { 
+            open_flags = O_RDWR | O_CREAT | O_TRUNC;
+            /**
+            * These are the file permissions we see when doing an `ls -l`: we can
+            * restrict access to the file. 0666 is octal notation for allowing all file
+            * permissions, which is then modified by the user's 'umask.'
+            */
+            fd = open(args[index + 1], open_flags, open_perms);
+            LOG("Filename > write: %s\n", args[index + 1]);
+            if (fd == -1) {
+                perror("open");
+                return 1;
+            }
+            dup2(fd, fileno(stdout));
+            if (dup2(fd, fileno(stdout)) == -1) { 
+                perror("dup2");
+                return 1;
+            }    
+        } else if (read) {
+            open_flags = O_RDONLY | O_CREAT | O_TRUNC;
+            fd = open(args[index + 1], open_flags, open_perms);
+            LOG("Filename < read: %s\n", args[index + 1]);
+            dup2(fd, fileno(stdin));
+            if (dup2(fd, fileno(stdin)) == -1) { 
+                perror("dup2");
+                return 1;
+            }
+        }       
+    }
+    return 0;    
 }
 
 int main(void)
@@ -161,77 +213,42 @@ int main(void)
             ssize_t index = -1;
 
             //loop through the args
+            
             for (int i = 0; i < elist_size(list) - 1; ++i) {
-                // LOG("args[i] = %s\n", args[i]);
                 if (strcmp(args[i], ">") == 0) {
                     index = i;
                     write = true;
-                    // LOG("Index > is: %ld\n", index);
-                    // LOG("Args > at index is: %s\n", args[index]);
                     break;
                 } else if (strcmp(args[i], "<") == 0) {
                     index = i;
                     read = true;
-                    // LOG("Index < is: %ld\n", index);
-                    // LOG("Args < at index is: %s\n", args[index]);
                     break;
                 } else if (strcmp(args[i], ">>") == 0) {
                     index = i;
                     append = true;
-                    // LOG("Index >> is: %ld\n", index);
-                    // LOG("Args >> at index is: %s\n", args[index]);
                     break;
-                } 
+                }
+
+                // while (strcmp(args[i], ">") == 0) {
+                //     index = i;
+                //     write = true;
+                //     jellyfish_io(index, args, append, write, read);
+                //     //break;
+                // } 
+                // while (strcmp(args[i], "<") == 0) {
+                //     jellyfish_io(index, args, append, write, read);
+                //     index = i;
+                //     read = true;
+                //     //break;
+                // } 
+                // while (strcmp(args[i], ">>") == 0) {
+                //     jellyfish_io(index, args, append, write, read);
+                //     index = i;
+                //     append = true;
+                //     //break;
+                // }
             }
-            LOG("Index now is: %ld\n", index);
-          
-            if(index != -1) { // means > < >> is in token
-                args[index] = 0;
-                int open_perms = 0666;
-                int open_flags;
-                int fd;
-                if (append) {
-                    open_flags = O_RDWR | O_CREAT | O_APPEND;
-                    fd = open(args[index + 1], open_flags, open_perms);
-                    LOG("Filename >> append: %s\n", args[index + 1]);
-                    if (fd == -1) {
-                        perror("open");
-                        return 1;
-                    }
-                    dup2(fd, fileno(stdout));
-                    if (dup2(fd, fileno(stdout)) == -1) { 
-                        perror("dup2");
-                        return 1;
-                    }    
-                } else if (write) { 
-                    open_flags = O_RDWR | O_CREAT | O_TRUNC;
-                    /**
-                    * These are the file permissions we see when doing an `ls -l`: we can
-                    * restrict access to the file. 0666 is octal notation for allowing all file
-                    * permissions, which is then modified by the user's 'umask.'
-                    */
-                    fd = open(args[index + 1], open_flags, open_perms);
-                    LOG("Filename > write: %s\n", args[index + 1]);
-                    if (fd == -1) {
-                        perror("open");
-                        return 1;
-                    }
-                    dup2(fd, fileno(stdout));
-                    if (dup2(fd, fileno(stdout)) == -1) { 
-                        perror("dup2");
-                        return 1;
-                    }    
-                } else if (read) {
-                    open_flags = O_RDONLY | O_CREAT | O_TRUNC;
-                    fd = open(args[index + 1], open_flags, open_perms);
-                    LOG("Filename < read: %s\n", args[index + 1]);
-                    dup2(fd, fileno(stdin));
-                    if (dup2(fd, fileno(stdin)) == -1) { 
-                        perror("dup2");
-                        return 1;
-                    }
-                }       
-            }    
+            jellyfish_io(index, args, append, write, read);
                 
             if(execvp(args[0], args) == -1) { // dump args to execvp
                 perror("execvp"); // this will only execute if execvp fail
