@@ -11,7 +11,10 @@
 #include <stdio.h>
 #include <string.h>
 
-int MAX_COMMAND_LENGTH = 256;
+#include "logger.h"
+
+#define MAX_COMMAND_LENGTH (256)
+#define MAX_HISTORY_CAPACITY (100)
 static struct clist *hist;
 static struct clist_iterator iterator;
 
@@ -44,12 +47,12 @@ void hist_print(void)
     //(and most importantly, the test cases that I'm working on will be able to see the full output!)
     void *command;
     long unsigned int index;
-    
+    iterator.idx = 0;
     while ((command = clist_iterate_rev(hist, &iterator)) != NULL) {
-        if (hist->insertions < 100) {
+        if (hist->insertions < MAX_HISTORY_CAPACITY) {
             index = iterator.idx;
         } else {
-            index = hist->insertions - 100 + iterator.idx;
+            index = hist->insertions - MAX_HISTORY_CAPACITY + iterator.idx;
         }
         printf("%zu %s\n", index, (char *)command);
     }
@@ -59,11 +62,15 @@ const char *hist_search_prefix(char *prefix)
 {
     // TODO: Retrieves the most recent command starting with 'prefix', or NULL
     // if no match found.
+    if (hist->insertions == 0) {
+        return NULL;
+    }
     void *command;
+    //iterator.idx = (hist->insertions - 1) % MAX_HISTORY_CAPACITY ;
+    iterator.idx = 0;
     while ((command = clist_iterate_rev(hist, &iterator)) != NULL) 
     {
-        //const char e = *((const char *) command);
-        if (strlen(command) > strlen(prefix)) {
+        if (strlen(command) < strlen(prefix)) {
             continue;
         } else {
             if (strncmp(prefix, command, strlen(prefix)) == 0) {
@@ -84,7 +91,8 @@ unsigned int hist_last_cnum(void)
 {
     // Retrieve the most recent command number.
     if (hist->insertions == 0) {
-        return 0;
+        LOGP("Insertion error!");
+        exit(-1);
     }
-    return hist->insertions - 2;
+    return hist->insertions - 1;
 }

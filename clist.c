@@ -90,7 +90,7 @@ void *clist_get(struct clist *list, size_t idx) {
 
 void *clist_iterate(struct clist *list, struct clist_iterator *iter) {
     void *ptr = clist_get(list, (list->insertions - iter->idx - 1));
-    iter->idx++;
+    iter->idx--;
     return ptr;
 }
 

@@ -6,10 +6,10 @@ LOGGER ?= 1
 
 # Compiler/linker flags
 CFLAGS += -g -Wall -fPIC -DLOGGER=$(LOGGER)
-LDLIBS += -lm -lreadline -lelist -lclist
+LDLIBS += -lm -lreadline -lelist 
 LDFLAGS += -L. -Wl,-rpath='$$ORIGIN'
 
-src=history.c shell.c ui.c util.c 
+src=history.c shell.c ui.c util.c clist.c
 obj=$(src:.c=.o)
 
 all: $(bin) libshell.so
@@ -24,6 +24,7 @@ shell.o: shell.c history.h logger.h ui.h util.h
 history.o: history.c history.h logger.h clist.h
 ui.o: ui.h ui.c logger.h history.h
 util.o: util.h logger.h
+clist.o: clist.c logger.h
 
 clean:
 	rm -f $(bin) $(obj) libshell.so vgcore.*

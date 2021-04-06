@@ -42,7 +42,7 @@ void init_ui(void)
 void destroy_ui(void)
 {
     // TODO cleanup code, if necessary
-    //free(read_sz);
+    // free(read_sz);
 }
 
 char *prompt_line(void)
@@ -151,7 +151,7 @@ char *read_command(void)
             return NULL;
         }
         line[read_sz - 1] = '\0';
-        LOG("got a command: %s", line);
+        LOG("got a command: %s\n", line);
 		return line;
 	}
 }

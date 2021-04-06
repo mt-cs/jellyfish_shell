@@ -190,21 +190,44 @@ void jellyfish_built_in(struct elist *list) {
     Note that command numbers are NOT the same as the array positions; 
     e.g., you may have 100 history elements, with command numbers 600 – 699.
     */
-    // else if (!strcmp(*comm, "!")){
-    //     LOGP("history execution...\n");
-    //     char **eg = elist_get(list, 1);
-    //     LOG("elist get 1 is: %s", &eg);
-    //     //const char *hist_search = hist_search_cnum(elist_get(list, 1)); 
-    //     //LOG("Repeat command: %s\n", hist_search);
-    // }
-    else if (!strcmp(*comm, "!!")){
-        LOGP("re-runs the last command that was entered.\n");
-        unsigned int last_command_num = hist_last_cnum();
-        LOG("Last command number is %ud\n", last_command_num);
-        const char *hist_cmd = hist_search_cnum(last_command_num);
-        LOG("Last history is: %s\n", hist_cmd);
+    else if (strncmp(*comm, "!", 1) == 0){
+        LOGP("history execution...\n");
+        char rest_of_command[256];
+        strcpy(rest_of_command, &((*comm)[1]));
+        char *tmp;
+        long command_num;
+        char *hist_search = NULL;
+        if (isdigit(rest_of_command[0]))
+        {
+            command_num = strtol(rest_of_command, &tmp, 10);
+            LOG("Command number: %ld\n", command_num);
+            hist_search =(char*) hist_search_cnum(command_num - 1);
+        } else if (strncmp(rest_of_command, "!", 1) != 0) {
+            hist_search=(char*) hist_search_prefix(rest_of_command);
+            LOG("Rest of command: %s\n", rest_of_command);
+            LOG("Command prefix: %s\n", hist_search);
+            
+        }
 
+        if (hist_search != NULL)
+        {
+            jellyfish_process_command(hist_search, list);
+        }
+        else {
+            LOGP("Repeat command not found :(\n");
+        }
+
+        //const char *hist_search = hist_search_cnum(elist_get(list, 1)); 
+        //LOG("Repeat command: %s\n", hist_search);
     }
+    // else if (!strcmp(*comm, "!!")){
+    //     LOGP("re-runs the last command that was entered.\n");
+    //     unsigned int last_command_num = hist_last_cnum();
+    //     LOG("Last command number is %ud\n", last_command_num);
+    //     const char *hist_cmd = hist_search_cnum(last_command_num);
+    //     LOG("Last history is: %s\n", hist_cmd);
+
+    // }
     // else if (!strcmp(*comm, "!ls")){
     //     LOGP("re-runs the last command that starts with ‘ls.’ ");
     
@@ -219,7 +242,7 @@ void jellyfish_built_in(struct elist *list) {
 void jellyfish_process_command(char *command, struct elist *list) {
         
         // HISTORY
-        if (strlen(command) > 0) {
+        if (strlen(command) > 0 && ((strncmp(command, "!", 1)) != 0)) {
             hist_add(command);
             LOG("Adding into history %s\n", command);
         }
@@ -235,19 +258,6 @@ void jellyfish_process_command(char *command, struct elist *list) {
             if (curr_tok[0] == '#') {
                 break;
             } 
-            if (curr_tok[0] == '!' && (isdigit(curr_tok[1]) == 1)) {
-                LOGP("history execution...\n");
-                LOG("comment afterward: %c\n", curr_tok[1]);
-                const char *hist_cmd = hist_search_cnum(curr_tok[1]-'0');
-                next_tok = (char*)hist_cmd;
-                while ((curr_tok = next_token(&next_tok, " \t\n")) != NULL) {
-                    LOG("Adding hist_cmd %s\n", next_tok);
-                    elist_add(list, &curr_tok);
-                }
-                // elist_add(list, &hist_cmd);
-                // LOG("!History command %s\n", hist_cmd);
-                break;
-            }
             LOG("adding: %s\n", curr_tok);
             elist_add(list, &curr_tok); // &curr_tok we are copying the pointers to the cahar arrays, instead of just the first char array
         }
