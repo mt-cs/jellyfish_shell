@@ -41,7 +41,7 @@ void init_ui(void)
 void destroy_ui(void)
 {
     // TODO cleanup code, if necessary
-
+    
 }
 
 char *prompt_line(void)

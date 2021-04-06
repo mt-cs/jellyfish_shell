@@ -91,5 +91,3 @@ unsigned int hist_last_cnum(void)
     }
     return hist->insertions - 1;
 }
-
-// circular list
