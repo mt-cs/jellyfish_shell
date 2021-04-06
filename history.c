@@ -41,10 +41,6 @@ void hist_add(const char *cmd)
 
 void hist_print(void)
 {
-    // When you implement hist_print, be sure to add an fflush(stdout) 
-    //at after you have printed your history list. 
-    //This makes sure everything gets flushed out 
-    //(and most importantly, the test cases that I'm working on will be able to see the full output!)
     void *command;
     long unsigned int index;
     iterator.idx = 0;
@@ -60,15 +56,13 @@ void hist_print(void)
 
 const char *hist_search_prefix(char *prefix)
 {
-    // TODO: Retrieves the most recent command starting with 'prefix', or NULL
-    // if no match found.
     if (hist->insertions == 0) {
         return NULL;
     }
     void *command;
-    //iterator.idx = (hist->insertions - 1) % MAX_HISTORY_CAPACITY ;
+    //iterator.idx = (hist->insertions - 1) % MAX_HISTORY_CAPACITY;
     iterator.idx = 0;
-    while ((command = clist_iterate_rev(hist, &iterator)) != NULL) 
+    while ((command = clist_iterate(hist, &iterator)) != NULL) 
     {
         if (strlen(command) < strlen(prefix)) {
             continue;

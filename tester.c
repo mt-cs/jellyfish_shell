@@ -39,6 +39,8 @@ int main()
     unsigned int res = hist_last_cnum();
     printf("%d\n", res);
 
+    
+
     hist_destroy();
     return 0;
 }

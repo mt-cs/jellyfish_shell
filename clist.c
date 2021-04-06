@@ -79,24 +79,18 @@ void *clist_get(struct clist *list, size_t idx) {
     {
         return NULL;
     } 
-    // mod idx
-    size_t real_idx = idx % list->capacity;
-    // printf("Idx %ld\n", idx);
-    // printf("Real idx %ld\n", real_idx);
-    // first we goes from element storage
-    // increment on element storage
+    size_t real_idx = idx % list->capacity; // mod idx
     return list->element_storage + real_idx * list->item_sz;
 }
 
 void *clist_iterate(struct clist *list, struct clist_iterator *iter) {
     void *ptr = clist_get(list, (list->insertions - iter->idx - 1));
-    iter->idx--;
+    iter->idx++;
     return ptr;
 }
 
 void *clist_iterate_rev(struct clist *list, struct clist_iterator *iter) {
     if (list->insertions < list->capacity) {
-        printf("we are in the if block\n");
         return clist_get(list, iter->idx++);
     } else {
         void *ptr = clist_get(list, iter->idx + list->insertions - list->capacity);
