@@ -24,6 +24,7 @@
   Function Declarations for builtin shell commands:
  */
 void jellyfish_cd(char **args);
+void jellyfish_built_in(struct elist *list);
 void jellyfish_execute(struct elist *list);
 void jellyfish_process_command(char *command, struct elist *list);
 int jellyfish_history(char **args);
@@ -102,6 +103,7 @@ int jellyfish_io(int index, char **args, bool append, bool write, bool read) {
     }
     return 0;    
 }
+
 void jellyfish_execute(struct elist *list) {
     // 5. fork a child process
     pid_t child = fork();
@@ -153,6 +155,62 @@ void jellyfish_execute(struct elist *list) {
     }
 }
 
+void jellyfish_built_in(struct elist *list) {
+    // 3. check for built-in functions
+    char **comm = elist_get(list, 0);
+    if (comm[0] == NULL ){
+        //continue;
+        return;
+    }
+    
+    // cd to change the CWD. cd without arguments should return to the user’s home directory.
+    if (!strcmp(*comm, "cd")){
+        char **dir = elist_get(list, 1);
+        jellyfish_cd(dir);
+    } 
+    // exit to exit the shell.
+    else if (!strcmp(*comm, "exit")){
+        LOGP("exit...\n");
+        //free(command);
+        //return 0;
+        exit(0);
+    }
+    //history, which prints the last 100 commands entered with their command numbers
+    else if (!strcmp(*comm, "history")){
+        LOGP("history...\n");
+        hist_print();
+        fflush(stdout);
+        //continue;
+        return;
+    }
+    /*  
+    ! (history execution): entering !39 will re-run command number 39, 
+    and !! re-runs the last command that was entered. 
+    !ls re-runs the last command that starts with ‘ls.’ 
+    Note that command numbers are NOT the same as the array positions; 
+    e.g., you may have 100 history elements, with command numbers 600 – 699.
+    */
+    // else if (!strcmp(*comm, "!")){
+    //     LOGP("history execution...\n");
+    //     char **eg = elist_get(list, 1);
+    //     LOG("elist get 1 is: %s", &eg);
+    //     //const char *hist_search = hist_search_cnum(elist_get(list, 1)); 
+    //     //LOG("Repeat command: %s\n", hist_search);
+    // }
+    // else if (!strcmp(*comm, "!!")){
+    //     LOGP("re-runs the last command that was entered.");
+    // }
+    // else if (!strcmp(*comm, "!ls")){
+    //     LOGP("re-runs the last command that starts with ‘ls.’ ");
+    
+    // }
+    // // jobs to list currently-running background jobs.
+    // else if (!strcmp(*comm, "jobs")){
+    //     LOGP("history");
+
+    // }
+}
+
 void jellyfish_process_command(char *command, struct elist *list) {
         
         // HISTORY
@@ -197,59 +255,7 @@ void jellyfish_process_command(char *command, struct elist *list) {
             //continue;
             return;
         } 
-        // 3. check for built-in functions
-        char **comm = elist_get(list, 0);
-        if (comm[0] == NULL ){
-            //continue;
-            return;
-        }
-        
-        // cd to change the CWD. cd without arguments should return to the user’s home directory.
-        if (!strcmp(*comm, "cd")){
-            char **dir = elist_get(list, 1);
-            jellyfish_cd(dir);
-        } 
-        // exit to exit the shell.
-        else if (!strcmp(*comm, "exit")){
-            LOGP("exit...\n");
-            //free(command);
-            //return 0;
-            exit(0);
-        }
-        //history, which prints the last 100 commands entered with their command numbers
-        else if (!strcmp(*comm, "history")){
-            LOGP("history...\n");
-            hist_print();
-            fflush(stdout);
-            //continue;
-            return;
-        }
-        /*  
-        ! (history execution): entering !39 will re-run command number 39, 
-        and !! re-runs the last command that was entered. 
-        !ls re-runs the last command that starts with ‘ls.’ 
-        Note that command numbers are NOT the same as the array positions; 
-        e.g., you may have 100 history elements, with command numbers 600 – 699.
-        */
-        // else if (!strcmp(*comm, "!")){
-        //     LOGP("history execution...\n");
-        //     char **eg = elist_get(list, 1);
-        //     LOG("elist get 1 is: %s", &eg);
-        //     //const char *hist_search = hist_search_cnum(elist_get(list, 1)); 
-        //     //LOG("Repeat command: %s\n", hist_search);
-        // }
-        // else if (!strcmp(*comm, "!!")){
-        //     LOGP("re-runs the last command that was entered.");
-        // }
-        // else if (!strcmp(*comm, "!ls")){
-        //     LOGP("re-runs the last command that starts with ‘ls.’ ");
-        
-        // }
-        // // jobs to list currently-running background jobs.
-        // else if (!strcmp(*comm, "jobs")){
-        //     LOGP("history");
-
-        // }
+        jellyfish_built_in(list);
         jellyfish_execute(list);
         free(command);
 }
