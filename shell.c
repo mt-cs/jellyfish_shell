@@ -58,7 +58,7 @@ void jellyfish_cd(char **dir)
 int jellyfish_io(int index, char **args, bool append, bool write, bool read) {
     if(index != -1) { // means > < >> is in token
         args[index] = 0;
-        int open_perms = 0666;
+        int open_perms = 0666; // 0666 is octal notation for allowing all file
         int open_flags;
         int fd;
         if (append) {
@@ -76,11 +76,6 @@ int jellyfish_io(int index, char **args, bool append, bool write, bool read) {
             }    
         } else if (write) { 
             open_flags = O_RDWR | O_CREAT | O_TRUNC;
-            /**
-            * These are the file permissions we see when doing an `ls -l`: we can
-            * restrict access to the file. 0666 is octal notation for allowing all file
-            * permissions, which is then modified by the user's 'umask.'
-            */
             fd = open(args[index + 1], open_flags, open_perms);
             LOG("Filename > write: %s\n", args[index + 1]);
             if (fd == -1) {
@@ -110,16 +105,24 @@ int main(void)
 {
     init_ui();
     char *command = NULL;
-    struct elist *list = elist_create(0, sizeof(char **));  
+    struct elist *list = elist_create(0, sizeof(char **));
+    hist_init(100);  
     signal(SIGINT, SIG_IGN);
+    
     while (true) {
         command = read_command();
         if (command == NULL) {
             free(command);
             break;
         }
-
         LOG("Input command: %s\n", command);
+        
+        // HISTORY
+        if (strlen(command) > 0) {
+            hist_add(command);
+        }
+        
+        LOG("Adding into history %s\n", command);
         // 1. tokenize command
         char *next_tok = command;
         char *curr_tok;
@@ -131,6 +134,14 @@ int main(void)
             if (curr_tok[0] == '#') {
                 break;
             } 
+            if (curr_tok[0] == '!') {
+                LOGP("history execution...\n");
+                LOG("comment afterward: %c\n", curr_tok[1]);
+                const char *ret = hist_search_cnum(curr_tok[1]);
+                elist_add(list, &ret);
+                break;
+            }
+           
             LOG("adding: %s\n", curr_tok);
             elist_add(list, &curr_tok); // &curr_tok we are copying the pointers to the cahar arrays, instead of just the first char array
         }
@@ -146,7 +157,7 @@ int main(void)
         if (elist_size(list) == 1) {
             LOGP("Empty command\n");
             continue;
-        }
+        } 
         // 3. check for built-in functions
         char **comm = elist_get(list, 0);
         if (comm[0] == NULL ){
@@ -160,33 +171,40 @@ int main(void)
         } 
         // exit to exit the shell.
         else if (!strcmp(*comm, "exit")){
-            LOGP("exit\n");
+            LOGP("exit...\n");
             return 0;
             //TODO: there is a function exit that can be called from anywhere but it might cause memory leak
         }
-        // //history, which prints the last 100 commands entered with their command numbers
-        // else if (!strcmp(*first, "history")){
-        //     LOGP("history");
+        //history, which prints the last 100 commands entered with their command numbers
+        else if (!strcmp(*comm, "history")){
+            LOGP("history...\n");
+            hist_print();
+            fflush(stdout);
+            continue;
+        }
+        /*  
+        ! (history execution): entering !39 will re-run command number 39, 
+        and !! re-runs the last command that was entered. 
+        !ls re-runs the last command that starts with ‘ls.’ 
+        Note that command numbers are NOT the same as the array positions; 
+        e.g., you may have 100 history elements, with command numbers 600 – 699.
+        */
+        // else if (!strcmp(*comm, "!")){
+        //     LOGP("history execution...\n");
+        //     char **eg = elist_get(list, 1);
+        //     LOG("elist get 1 is: %s", &eg);
+        //     //const char *hist_search = hist_search_cnum(elist_get(list, 1)); 
+        //     //LOG("Repeat command: %s\n", hist_search);
         // }
-        // /*  
-        // ! (history execution): entering !39 will re-run command number 39, 
-        // and !! re-runs the last command that was entered. 
-        // !ls re-runs the last command that starts with ‘ls.’ 
-        // Note that command numbers are NOT the same as the array positions; 
-        // e.g., you may have 100 history elements, with command numbers 600 – 699.
-        // */
-        // else if (!strcmp(*first, "!")){
-        //     LOGP("history execution");
-        // }
-        // else if (!strcmp(*first, "!!")){
+        // else if (!strcmp(*comm, "!!")){
         //     LOGP("re-runs the last command that was entered.");
         // }
-        // else if (!strcmp(*first, "!ls")){
+        // else if (!strcmp(*comm, "!ls")){
         //     LOGP("re-runs the last command that starts with ‘ls.’ ");
         
         // }
         // // jobs to list currently-running background jobs.
-        // else if (!strcmp(*first, "jobs")){
+        // else if (!strcmp(*comm, "jobs")){
         //     LOGP("history");
 
         // }
@@ -206,18 +224,11 @@ int main(void)
         } else if (child == 0) {
             /* I am the child */
             // args is pointing at the start of an array of pointer
-             // if we change the list in anyway the original args will not be valid anymore
+            // if we change the list in anyway the original args will not be valid anymore
             char **args = elist_get(list, 0); // we get the first element, we will dump args to execvp
-            // LOG("args is: %s\n", *args);
-            // LOG("args[0] is: %s\n", args[0]);
-
-            
-            
-            //ssize_t index = elist_index_of(list, ">");
             ssize_t index = -1;
 
             //loop through the args
-            
             for (int i = 0; i < elist_size(list) - 1; ++i) {
                 bool write = false;
                 bool read = false;
