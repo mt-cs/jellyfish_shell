@@ -17,9 +17,8 @@ static struct clist_iterator iterator;
 
 void hist_init(unsigned int limit)
 {
-    // TODO: set up history data structures, with 'limit' being the maximum
+    // set up history data structures, with 'limit' being the maximum
     // number of entries maintained.
-    // insertion - capacity
     iterator = clist_create_iter();
     hist = clist_create(limit, (sizeof(char) * MAX_COMMAND_LENGTH));
 }
@@ -60,34 +59,32 @@ const char *hist_search_prefix(char *prefix)
 {
     // TODO: Retrieves the most recent command starting with 'prefix', or NULL
     // if no match found.
-    // const char *command;
-    // while ((command = clist_iterate_rev(hist, &iterator)) != NULL) 
-    // {
-    //     const char e = *((const char *) command);
-    //     if (strlen(e) > strlen(prefix)) {
-    //         continue;
-    //     } else {
-    //         if (strncmp(prefix, e, strlen(prefix)) == 0) {
-    //             return e;
-    //         }    
-    //     }
-    // }
+    void *command;
+    while ((command = clist_iterate_rev(hist, &iterator)) != NULL) 
+    {
+        //const char e = *((const char *) command);
+        if (strlen(command) > strlen(prefix)) {
+            continue;
+        } else {
+            if (strncmp(prefix, command, strlen(prefix)) == 0) {
+                return command;
+            }    
+        }
+    }
     return NULL;
 }
 
 const char *hist_search_cnum(int command_number)
 {
-    // TODO: Retrieves a particular command number. Return NULL if no match
-    // found.
+    // Retrieves a particular command number. Return NULL if no match found.
     return clist_get(hist, (size_t)command_number);
-    //return NULL;
 }
 
 unsigned int hist_last_cnum(void)
 {
-    // TODO: Retrieve the most recent command number.
+    // Retrieve the most recent command number.
     if (hist->insertions == 0) {
         return 0;
     }
-    return hist->insertions - 1;
+    return hist->insertions - 2;
 }

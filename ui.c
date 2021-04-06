@@ -22,6 +22,7 @@ static const char *bad_str  = "🤮";
 
 static int readline_init(void);
 static bool scripting = false;
+static ssize_t read_sz;
 
 void init_ui(void)
 {
@@ -41,7 +42,7 @@ void init_ui(void)
 void destroy_ui(void)
 {
     // TODO cleanup code, if necessary
-    
+    //free(read_sz);
 }
 
 char *prompt_line(void)
@@ -143,7 +144,8 @@ char *read_command(void)
 	} else {
         char *line= NULL;
         size_t line_sz = 0;
-        ssize_t read_sz = getline(&line, &line_sz, stdin);
+        read_sz = getline(&line, &line_sz, stdin);
+        //ssize_t read_sz = getline(&line, &line_sz, stdin);
         if (read_sz == -1) {
             perror("getline");
             return NULL;
@@ -166,7 +168,8 @@ int readline_init(void)
 int key_up(int count, int key)
 {
     /* Modify the command entry text: */
-    rl_replace_line("User pressed 'up' key", 1);
+    char *command_key = "User pressed 'up' key";
+    rl_replace_line(command_key, 1);
 
     /* Move the cursor to the end of the line: */
     rl_point = rl_end;
@@ -190,6 +193,6 @@ int key_down(int count, int key) // not so useful, count probably 1
     // previously). Going past the most recent history command blanks out the
     // command line to allow the user to type a new command.
 
-	// Create a global variable to tracl
+	// Create a global variable to track
     return 0;
 }

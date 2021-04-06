@@ -13,6 +13,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 #include <limits.h>
+#include <ctype.h>
 
 #include "history.h"
 #include "logger.h"
@@ -171,10 +172,9 @@ void jellyfish_built_in(struct elist *list) {
     // exit to exit the shell.
     else if (!strcmp(*comm, "exit")){
         LOGP("exit...\n");
-        //free(command);
-        //return 0;
         exit(0);
     }
+
     //history, which prints the last 100 commands entered with their command numbers
     else if (!strcmp(*comm, "history")){
         LOGP("history...\n");
@@ -197,9 +197,14 @@ void jellyfish_built_in(struct elist *list) {
     //     //const char *hist_search = hist_search_cnum(elist_get(list, 1)); 
     //     //LOG("Repeat command: %s\n", hist_search);
     // }
-    // else if (!strcmp(*comm, "!!")){
-    //     LOGP("re-runs the last command that was entered.");
-    // }
+    else if (!strcmp(*comm, "!!")){
+        LOGP("re-runs the last command that was entered.\n");
+        unsigned int last_command_num = hist_last_cnum();
+        LOG("Last command number is %ud\n", last_command_num);
+        const char *hist_cmd = hist_search_cnum(last_command_num);
+        LOG("Last history is: %s\n", hist_cmd);
+
+    }
     // else if (!strcmp(*comm, "!ls")){
     //     LOGP("re-runs the last command that starts with ‘ls.’ ");
     
@@ -230,18 +235,23 @@ void jellyfish_process_command(char *command, struct elist *list) {
             if (curr_tok[0] == '#') {
                 break;
             } 
-            if (curr_tok[0] == '!') {
+            if (curr_tok[0] == '!' && (isdigit(curr_tok[1]) == 1)) {
                 LOGP("history execution...\n");
                 LOG("comment afterward: %c\n", curr_tok[1]);
                 const char *hist_cmd = hist_search_cnum(curr_tok[1]-'0');
-                elist_add(list, &hist_cmd);
-                LOG("Adding into elist %s\n", hist_cmd);
+                next_tok = (char*)hist_cmd;
+                while ((curr_tok = next_token(&next_tok, " \t\n")) != NULL) {
+                    LOG("Adding hist_cmd %s\n", next_tok);
+                    elist_add(list, &curr_tok);
+                }
+                // elist_add(list, &hist_cmd);
+                // LOG("!History command %s\n", hist_cmd);
                 break;
             }
             LOG("adding: %s\n", curr_tok);
             elist_add(list, &curr_tok); // &curr_tok we are copying the pointers to the cahar arrays, instead of just the first char array
         }
-        char *null = (char *) 0; // set a null char and append it to the end of list
+        char *null = (char *) 0;
         elist_add(list, &null); // we terminate the list of token with null
         // the way execvp knows that we are at the end of the list of tokens (argument) of the command
         // is when it hits a null. we are doing it in a funky way because that's how we deign our elist
@@ -257,7 +267,6 @@ void jellyfish_process_command(char *command, struct elist *list) {
         } 
         jellyfish_built_in(list);
         jellyfish_execute(list);
-        free(command);
 }
 
 int main(void)
@@ -268,7 +277,7 @@ int main(void)
     struct elist *list = elist_create(0, sizeof(char **));
 
     signal(SIGINT, SIG_IGN);
-    //signal(SIGCHLD, jobs_sigchld);
+    signal(SIGCHLD, child_signal_handler);
     while (true) {
         char *command = read_command();
         if (command == NULL) {
@@ -278,6 +287,7 @@ int main(void)
         LOG("Input command: %s\n", command);
         jellyfish_process_command(command, list);
     }
+    
     //destroy_ui();
     //jobs_destroy();
     hist_destroy();

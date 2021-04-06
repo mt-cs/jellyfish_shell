@@ -23,6 +23,13 @@ char *next_token(char **str_ptr, const char *delim);
 
 /**
  * Set up our signal handler. SIGINT can be sent via Ctrl+C 
+ * @param signo signal number
  */
 void sigint_handler(int signo);
+
+/**
+ * Set up our signal handler for SIGCHLD
+ * @param signum signal number
+ */
+void child_signal_handler(int signo);
 #endif

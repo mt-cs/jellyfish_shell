@@ -5,6 +5,9 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <wait.h>
+#include <signal.h>
+#include <sys/types.h>
 
 char *next_token(char **str_ptr, const char *delim)
 {
@@ -54,6 +57,11 @@ void sigint_handler(int signo) {
      */
     printf("\n");
     printf("Goodbye 👋 🙃!\n");
-    
+    fflush(stdout);
     exit(0);
+}
+
+void child_signal_handler(int signo) {
+    while (waitpid(-1, NULL, WNOHANG) > 0) {
+	}
 }
