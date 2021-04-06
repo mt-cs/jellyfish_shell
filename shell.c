@@ -257,7 +257,6 @@ void jellyfish_process_command(char *command, struct elist *list) {
         // is when it hits a null. we are doing it in a funky way because that's how we deign our elist
         // we pass a pointer into something and we memcpy it into place
         // ls -l / null
-        
         LOG("Processed %zu tokens\n", elist_size(list));
 
         if (elist_size(list) == 1) {
