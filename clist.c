@@ -79,7 +79,7 @@ void *clist_get(struct clist *list, size_t idx) {
     {
         return NULL;
     } 
-    size_t real_idx = idx % list->capacity; // mod idx
+    size_t real_idx = idx % list->capacity;
     return (char *)list->element_storage + real_idx * list->item_sz;
 }
 

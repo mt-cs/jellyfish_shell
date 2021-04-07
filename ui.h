@@ -67,7 +67,7 @@ int set_status(int status);
  *
  * @return current command number
  */
-unsigned int prompt_cmd_num(void);
+int prompt_cmd_num(void);
 
 /**
  * Prompts the user for a command, reads it, and then returns it to be processed

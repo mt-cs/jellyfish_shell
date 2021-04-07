@@ -9,6 +9,8 @@
 #include <signal.h>
 #include <sys/types.h>
 
+#include "logger.h"
+
 char *next_token(char **str_ptr, const char *delim)
 {
     if (*str_ptr == NULL) {
@@ -62,6 +64,9 @@ void sigint_handler(int signo) {
 }
 
 void child_signal_handler(int signo) {
-    while (waitpid(-1, NULL, WNOHANG) > 0) {
-	}
+    // get the return
+    // that's the child
+    // loop through find the job number
+    int job_num = waitpid(-1, NULL, WNOHANG) > 0;
+    LOG("Job num is: %d\n", job_num);
 }

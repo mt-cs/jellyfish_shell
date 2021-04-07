@@ -20,8 +20,6 @@ static struct clist_iterator iterator;
 
 void hist_init(unsigned int limit)
 {
-    // set up history data structures, with 'limit' being the maximum
-    // number of entries maintained.
     iterator = clist_create_iter();
     hist = clist_create(limit, (sizeof(char) * MAX_COMMAND_LENGTH));
 }
@@ -33,7 +31,6 @@ void hist_destroy(void)
 
 void hist_add(const char *cmd)
 {
-    //clist_add(hist, cmd);
     char *target = strdup(cmd);
     clist_add(hist, target);
     free(target);

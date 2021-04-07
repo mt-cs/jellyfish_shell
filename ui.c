@@ -50,7 +50,7 @@ char *prompt_line(void)
     const char *status = prompt_status() ? bad_str : good_str; 
     // because, conventionally, programs return 0 when they ran successfully.
     char cmd_num[25];
-    snprintf(cmd_num, 25, "%ud", prompt_cmd_num());
+    snprintf(cmd_num, 25, "%d", prompt_cmd_num());
 
     char *user = prompt_username();
     char *host = prompt_hostname();
@@ -128,7 +128,7 @@ int prompt_status(void)
     return status_num;
 }
 
-unsigned int prompt_cmd_num(void)
+int prompt_cmd_num(void)
 {
     return com_number;
 }
@@ -143,7 +143,7 @@ char *read_command(void)
 	    return command;
 	} else {
         //static char *line= NULL;
-        size_t line_sz = 0;
+        static size_t line_sz = 0;
         read_sz = getline(&line, &line_sz, stdin);
         //ssize_t read_sz = getline(&line, &line_sz, stdin);
         if (read_sz == -1) {

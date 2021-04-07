@@ -20,33 +20,73 @@
 #include "ui.h"
 #include "elist.h"
 #include "util.h"
-
+#include "job.h"
 /*
   Function Declarations for builtin shell commands:
  */
-void jellyfish_cd(char **args);
+void jellyfish_cd(struct elist *list);
 bool jellyfish_built_in(struct elist *list);
 void jellyfish_execute(struct elist *list);
-void jellyfish_process_command(char *command, struct elist *list);
-int jellyfish_history(char **args);
-int jellyfish_history_execution(char **args);
+void jellyfish_process_command(char *command, struct elist *list, bool repeat);
+void jellyfish_history_execution(struct elist *list, char **comm);
+void jellyfish_history();
+void jellyfish_exit();
 int jellyfish_jobs(char **args);
 int jellyfish_io(int index, char **args, bool append, bool write, bool read);
 
-int jellyfish_history(char **args) {
-    return 0;
+void jellyfish_history() {
+    LOGP("history...\n");
+    hist_print();
+    fflush(stdout);
 }
 
-int jellyfish_history_execution(char **args) {
-    return 0;
+void jellyfish_exit(){
+    LOGP("exit...\n");
+    exit(0);
+}
+
+void jellyfish_history_execution(struct elist *list, char **comm) {
+    LOGP("history execution...\n");
+    char rest_of_command[256];
+    strcpy(rest_of_command, &((*comm)[1]));
+    char *tmp;
+    const char *hist_search = NULL;
+    if (isdigit(rest_of_command[0])) 
+    {
+        long command_num = strtol(rest_of_command, &tmp, 10);
+        LOG("Command number: %ld\n", command_num);
+        hist_search = hist_search_cnum(command_num - 1);
+    } 
+    else if (strncmp(rest_of_command, "!", 1) == 0) 
+    {
+        hist_search = hist_search_cnum(hist_last_cnum());
+        LOG("Last command: %s\n", hist_search);
+    } 
+    else 
+    {
+        hist_search= hist_search_prefix(rest_of_command);
+        LOG("Rest of command: %s\n", rest_of_command);
+        LOG("Command prefix: %s\n", hist_search);
+    }
+
+    if (hist_search != NULL)
+    {
+        char *hist_dup = strdup(hist_search);
+        bool repeat = true;
+        jellyfish_process_command(hist_dup, list, repeat);
+    }
+    else {
+        LOGP("Repeat command not found :(\n");
+    }
 }
 
 int jellyfish_jobs(char **args) {
     return 0;
 }
 
-void jellyfish_cd(char **dir)
+void jellyfish_cd(struct elist *list)
 {
+    char **dir = elist_get(list, 1);
     LOGP("change directory...\n");
     chdir(*dir);
     if (*dir == NULL || strcmp(*dir, "~" ) == 0) {
@@ -60,12 +100,13 @@ void jellyfish_cd(char **dir)
 }
 
 int jellyfish_io(int index, char **args, bool append, bool write, bool read) {
-    if(index != -1) { // means > < >> is in token
+    if(index != -1) { 
         args[index] = 0;
         int open_perms = 0666; // 0666 is octal notation for allowing all file
         int open_flags;
         int fd;
-        if (append) {
+        if (append) 
+        {
             open_flags = O_RDWR | O_CREAT | O_APPEND;
             fd = open(args[index + 1], open_flags, open_perms);
             LOG("Filename >> append: %s\n", args[index + 1]);
@@ -78,7 +119,9 @@ int jellyfish_io(int index, char **args, bool append, bool write, bool read) {
                 perror("dup2");
                 return 1;
             }    
-        } else if (write) { 
+        } 
+        else if (write) 
+        { 
             open_flags = O_RDWR | O_CREAT | O_TRUNC;
             fd = open(args[index + 1], open_flags, open_perms);
             LOG("Filename > write: %s\n", args[index + 1]);
@@ -91,7 +134,9 @@ int jellyfish_io(int index, char **args, bool append, bool write, bool read) {
                 perror("dup2");
                 return 1;
             }    
-        } else if (read) {
+        } 
+        else if (read) 
+        {
             open_flags = O_RDONLY;
             fd = open(args[index + 1], open_flags);
             LOG("Filename < read: %s\n", args[index + 1]);
@@ -109,134 +154,87 @@ int jellyfish_io(int index, char **args, bool append, bool write, bool read) {
 void jellyfish_execute(struct elist *list) {
     // 5. fork a child process
     pid_t child = fork();
-    if (child == -1) {
+    if (child == -1) 
+    {
         perror("fork");
-    } else if (child == 0) {
-        /* I am the child */
-        // args is pointing at the start of an array of pointer
-        // if we change the list in anyway the original args will not be valid anymore
-        char **args = elist_get(list, 0); // we get the first element, we will dump args to execvp
+    } 
+    else if (child == 0) 
+    {
+        char **args = elist_get(list, 0);
         ssize_t index;
 
-        //loop through the args
         for (int i = 0; i < elist_size(list) - 1; ++i) {
             bool write = false;
             bool read = false;
             bool append = false;
-            if (strcmp(args[i], ">") == 0) {
+            if (strcmp(args[i], ">") == 0) 
+            {
                 index = i;
                 write = true;
                 jellyfish_io(index, args, append, write, read);
                 LOGP ("we are in >\n");
-            } else if (strcmp(args[i], "<") == 0) {
+            } 
+            else if (strcmp(args[i], "<") == 0) 
+            {
                 index = i;
                 read = true;
                 jellyfish_io(index, args, append, write, read);
                 LOGP ("we are in <\n");
-            } else if (strcmp(args[i], ">>") == 0) {
+            } 
+            else if (strcmp(args[i], ">>") == 0) 
+            {
                 index = i;
                 append = true;
                 jellyfish_io(index, args, append, write, read);
                 LOGP ("we are in >>\n");
             } 
         }   
-        if(execvp(args[0], args) == -1) { // dump args to execvp
-            perror("execvp"); // this will only execute if execvp fail
+        if(execvp(args[0], args) == -1) {
+            perror("execvp"); 
             close(fileno(stdin));
             close(fileno(stdout));
             close(fileno(stderr));
             exit(1);
         }
-    } else {
-        /* I am the parent */
+    } 
+    else 
+    {
         int status; //synchronize the processes
-        wait(&status);
+        wait(&status); // DON'T CALL THIS WHEN IT"S BACKGROUND
         set_status(status);
         LOG("Child finished executing: %d\n", status);
-        elist_clear(list); // if we don't have the parent waiting for the child anymore, that's effectively a background job
+        elist_clear(list); 
     }
 }
 
 bool jellyfish_built_in(struct elist *list) {
     // 3. check for built-in functions
     char **comm = elist_get(list, 0);
-    if (comm[0] == NULL ){
+    if (comm[0] == NULL )
+    {
         //continue;
         return true;
     }
-    
-    // cd to change the CWD. cd without arguments should return to the user’s home directory.
-    if (!strcmp(*comm, "cd")){
-        char **dir = elist_get(list, 1);
-        jellyfish_cd(dir);
+    if (!strcmp(*comm, "cd"))
+    {
+        jellyfish_cd(list);
         return true;
     } 
-    // exit to exit the shell.
-    else if (!strcmp(*comm, "exit")){
-        LOGP("exit...\n");
-        exit(0);
-    }
-
-    //history, which prints the last 100 commands entered with their command numbers
-    else if (!strcmp(*comm, "history")){
-        LOGP("history...\n");
-        hist_print();
-        fflush(stdout);
-        //continue;
+    else if (!strcmp(*comm, "exit"))
+    {
+        jellyfish_exit();
         return true;
     }
-    /*  
-    ! (history execution): entering !39 will re-run command number 39, 
-    and !! re-runs the last command that was entered. 
-    !ls re-runs the last command that starts with ‘ls.’ 
-    Note that command numbers are NOT the same as the array positions; 
-    e.g., you may have 100 history elements, with command numbers 600 – 699.
-    */
+    else if (!strcmp(*comm, "history"))
+    {
+        jellyfish_history();
+        return true;
+    }
     else if (strncmp(*comm, "!", 1) == 0)
     {
-        LOGP("history execution...\n");
-        char rest_of_command[256];
-        strcpy(rest_of_command, &((*comm)[1]));
-        char *tmp;
-        char *hist_search = NULL;
-        if (isdigit(rest_of_command[0])) 
-        {
-            long command_num = strtol(rest_of_command, &tmp, 10);
-            LOG("Command number: %ld\n", command_num);
-            hist_search =(char*) hist_search_cnum(command_num - 1);
-        } 
-        else if (strncmp(rest_of_command, "!", 1) == 0) 
-        {
-            //unsigned int last_command = hist_last_cnum();
-            hist_search =(char*) hist_search_cnum(hist_last_cnum());
-            LOG("Last command: %s\n", hist_search);
-        } 
-        else 
-        {
-            hist_search=(char*) hist_search_prefix(rest_of_command);
-            LOG("Rest of command: %s\n", rest_of_command);
-            LOG("Command prefix: %s\n", hist_search);
-        }
-
-        if (hist_search != NULL)
-        {
-            jellyfish_process_command(hist_search, list);
-        }
-        else {
-            LOGP("Repeat command not found :(\n");
-        }
+        jellyfish_history_execution(list, comm);
         return true;
     }
-    // else if (!strcmp(*comm, "!!")){
-    //     LOGP("re-runs the last command that was entered.\n");
-    //     unsigned int last_command_num = hist_last_cnum();
-    //     LOG("Last command number is %ud\n", last_command_num);
-    //     const char *hist_cmd = hist_search_cnum(last_command_num);
-    //     LOG("Last history is: %s\n", hist_cmd);
-
-    // }
-    // else if (!strcmp(*comm, "!ls")){
-    //     LOGP("re-runs the last command that starts with ‘ls.’ ");
     
     // }
     // // jobs to list currently-running background jobs.
@@ -248,61 +246,52 @@ bool jellyfish_built_in(struct elist *list) {
     return false;
 }
 
-void jellyfish_process_command(char *command, struct elist *list) {
+void jellyfish_process_command(char *command, struct elist *list, bool repeat) {
         
-        // HISTORY
-        if (strlen(command) > 0 && ((strncmp(command, "!", 1)) != 0))
-        {
-            hist_add(command);
-            LOG("Adding into history %s\n", command);
-        }
-     
-        // 1. tokenize command
-        char *next_tok = command;
-        char *curr_tok;
+    if (strlen(command) > 0 && ((strncmp(command, "!", 1)) != 0))
+    {
+        hist_add(command);
+        LOG("Adding into history %s\n", command);
+    }
+    
+    char *next_tok = command;
+    char *curr_tok;
 
-        elist_clear(list);
-        // 2. add each token to a list
-        while ((curr_tok = next_token(&next_tok, " \t\n")) != NULL)
+    elist_clear(list);
+    while ((curr_tok = next_token(&next_tok, " \t\n")) != NULL)
+    {
+        if (curr_tok[0] == '#') 
         {
-            // # (comments): strings prefixed with # will be ignored by the shell
-            if (curr_tok[0] == '#') 
-            {
-                break;
-            } 
-            LOG("adding: %s\n", curr_tok);
-            elist_add(list, &curr_tok); // &curr_tok we are copying the pointers to the cahar arrays, instead of just the first char array
-        }
-        char *null = (char *) 0;
-        elist_add(list, &null); // we terminate the list of token with null
-        // the way execvp knows that we are at the end of the list of tokens (argument) of the command
-        // is when it hits a null. we are doing it in a funky way because that's how we deign our elist
-        // we pass a pointer into something and we memcpy it into place
-        // ls -l / null
-        LOG("Processed %zu tokens\n", elist_size(list));
-
-        if (elist_size(list) == 1)
-        {
-            LOGP("Empty command\n");
-            //continue;
-            return;
+            break;
         } 
-        //jellyfish_built_in(list); // TODO: make sure built-in doesn't called fork 
-        // chdir return status, pass that integer return to the status
-        // history always set to zero
-        bool built_in = jellyfish_built_in(list);
-        if (built_in == false)
-        {
-            jellyfish_execute(list);
-        }
-        
+        LOG("adding: %s\n", curr_tok);
+        elist_add(list, &curr_tok); 
+    }
+    char *null = (char *) 0;
+    elist_add(list, &null); 
+    LOG("Processed %zu tokens\n", elist_size(list));
+
+    if (elist_size(list) == 1)
+    {
+        LOGP("Empty command\n");
+
+        return;
+    } 
+    bool built_in = jellyfish_built_in(list);
+    if (built_in == false)
+    {
+        jellyfish_execute(list);
+    } 
+    if (repeat == true) {
+        free(command);
+    }
 }
 
 int main(void)
 {
     init_ui();
     hist_init(100);
-    //jobs_init();
+    job_init();
     struct elist *list = elist_create(0, sizeof(char **));
 
     signal(SIGINT, SIG_IGN);
@@ -313,12 +302,11 @@ int main(void)
             break;
         }
         LOG("Input command: %s\n", command);
-        
-        jellyfish_process_command(command, list);
+        jellyfish_process_command(command, list, false);
     }
     
     destroy_ui();
-    //jobs_destroy();
+    job_destroy();
     hist_destroy();
     elist_destroy(list);
     return 0;
