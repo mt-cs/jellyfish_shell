@@ -10,7 +10,7 @@
 #include <sys/types.h>
 
 #include "logger.h"
-
+#include "job.h"
 char *next_token(char **str_ptr, const char *delim)
 {
     if (*str_ptr == NULL) {
@@ -67,6 +67,17 @@ void child_signal_handler(int signo) {
     // get the return
     // that's the child
     // loop through find the job number
-    pid_t wait_pid = waitpid(-1, NULL, WNOHANG) > 0;
-    LOG("Job num is: %ld\n", (long)job_num);
+    int status=0;
+    pid_t wait_pid;
+    LOGP("-----------------------------------------child_signal_handler\n");
+    //while((wait_pid = waitpid(-1, &status, WNOHANG)) > 0)
+    {
+        wait_pid = waitpid(-1, &status, WNOHANG);
+        LOG("Job num is: %d signo %d status %d\n", wait_pid, signo, WEXITSTATUS(status));
+        
+        //if(wait_pid != 0)
+        {
+            job_remove(wait_pid);
+        }
+    }
 }

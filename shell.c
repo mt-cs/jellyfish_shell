@@ -31,7 +31,7 @@ void jellyfish_process_command(char *command, struct elist *list, bool repeat);
 void jellyfish_history_execution(struct elist *list, char **comm);
 void jellyfish_history();
 void jellyfish_exit();
-int jellyfish_jobs(struct elist *job_list);
+void jellyfish_jobs();
 int jellyfish_io(int index, char **args, bool append, bool write, bool read);
 
 void jellyfish_history() {
@@ -80,13 +80,9 @@ void jellyfish_history_execution(struct elist *list, char **comm) {
     }
 }
 
-int jellyfish_jobs(struct elist *job_list) {
-    //for(int i = 0; i < elist_size(job_list); i++) {
-        //struct Job *back_job = elist_get(job_list, i);
-        //printf("%s\n", back_job->command);
-    //}
-    return 0;
-}
+void jellyfish_jobs() {
+    job_print();
+}   
 
 void jellyfish_cd(struct elist *list)
 {
@@ -156,6 +152,7 @@ int jellyfish_io(int index, char **args, bool append, bool write, bool read) {
 }
 
 void jellyfish_execute(struct elist *list) {
+    char **args = elist_get(list, 0);
     pid_t child = fork();
     if (child == -1) 
     {
@@ -163,7 +160,17 @@ void jellyfish_execute(struct elist *list) {
     } 
     else if (child == 0) 
     {
-        char **args = elist_get(list, 0);
+        //child
+
+        //if background task, remove the &
+        char* last_token = args[elist_size(list) - 2];
+        if (last_token[strlen(last_token) - 1] == '&') {
+            LOGP("GETTING BACKGROUND JOB IN CHILD\n");
+            //last_token[strlen(last_token) - 1] = '\0';
+            elist_remove(list, elist_size(list)-2);
+        }
+
+
         ssize_t index;
 
         for (int i = 0; i < elist_size(list) - 1; ++i) {
@@ -191,7 +198,8 @@ void jellyfish_execute(struct elist *list) {
                 jellyfish_io(index, args, append, write, read);
                 LOGP ("we are in >>\n");
             } 
-        }   
+        } 
+        //LOG("Args of 0 %s", args[0]);  
         if(execvp(args[0], args) == -1) {
             perror("execvp"); 
             close(fileno(stdin));
@@ -199,14 +207,39 @@ void jellyfish_execute(struct elist *list) {
             close(fileno(stderr));
             exit(1);
         }
+        LOGP("--------------------------------CHILD RETURNING\n");
+        exit(0);
     } 
     else 
     {
+        //parent
         int status; //synchronize the processes
-        wait(&status); // DON'T CALL THIS WHEN IT"S BACKGROUND
-        set_status(status);
-        LOG("Child finished executing: %d\n", status);
-        elist_clear(list); 
+        char* last_token = args[elist_size(list) - 2];
+        LOG("Last token is %s\n", last_token);
+        if (last_token[strlen(last_token) - 1] == '&') {
+            //background
+            LOGP("GETTING BACKGROUND JOB IN PARENT\n");
+            struct job job_new;
+            job_new.pid = child;
+
+            strcpy(job_new.command, "");
+            for (int i = 0; i < elist_size(list) - 1; ++i)
+            {
+                strcat(job_new.command, args[i]);
+                strcat(job_new.command, " ");
+            }
+
+            job_add(job_new);
+        } else {
+            //foreground
+            int finished_pid = waitpid(child, &status, 0); 
+            
+            //if mistakenly we intercept the end of a backrgound child, remove it
+            //job_remove(finished_pid);
+            set_status(status);
+            LOG("Child finished executing: %d, pid %d\n", status, finished_pid);
+        }
+        
     }
 }
 
@@ -236,14 +269,11 @@ bool jellyfish_built_in(struct elist *list) {
         jellyfish_history_execution(list, comm);
         return true;
     }
-    
-    // }
-    // // jobs to list currently-running background jobs.
-    // else if (!strcmp(*comm, "jobs")){
-    //     LOGP("history");
-    // ALWAYS US WAITPID, detect the & and don't wait for it anymore
-    // use elist to store the job list
-    // }
+    else if (!strcmp(*comm, "jobs")){
+        LOGP("background\n");
+        jellyfish_jobs();
+        return true;
+    }
     return false;
 }
 

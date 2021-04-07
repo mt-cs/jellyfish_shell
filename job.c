@@ -14,31 +14,6 @@
 #include "elist.h"
 #include "job.h"
 
-/**
- * If a command ends in &, then it should run in the background. 
- * In other words, don’t wait for the command to finish before 
- * prompting for the next command. 
- * If you enter jobs, your shell should print out 
- * a list of currently-running backgrounded processes 
- * (use the original command line as it was entered, including the & character). 
- * The status of background jobs is not shown in the prompt.
-
-To implement this, you will need:
-
-A signal handler for SIGCHLD. This signal is sent to a process any time one of its children exit.
-A non-blocking call to waitpid in your signal handler. Pass in pid = -1 and options = WNOHANG.
-This tells your signal handler the PID of the child process that exited. 
-If the PID is in your jobs list, then it can be removed.
-
-The difference between a background job and a regular job is simply whether 
-or not a blocking call to waitpid() is performed. 
-If you do a standard waitpid() with options = 0, then the job will run in the foreground 
-and the shell won’t prompt for a new command until the child finishes (the usual case). 
-Otherwise, the process will run and the shell will prompt for the next command without waiting.
-
-NOTE: your shell prompt output may print in the wrong place when using background jobs. This is completely normal. 
- */
-
 struct elist *jobs_list;
 
 void job_init() 
@@ -57,8 +32,28 @@ void job_destroy(void)
 }
 
 void job_print(void) {
+    void *a;
+    size_t index = 0;
     
+    while ((a = elist_get(jobs_list, index)) != NULL) {
+        struct job * j = a;
+        printf("%s\n", j->command);
+        index++;
+    }
 }
 
-void job_remove(pid_t pid);
+void job_remove(pid_t pid) {
+    void *curr_job;
+    size_t index = 0;
+    while ((curr_job = elist_get(jobs_list, index)) != NULL) {
+        struct job * j = curr_job;
+        //LOG("checking pid %d index %lu\n", j->pid, index);
+        if (j->pid == pid) {
+            //LOGP("pid found in list\n");
+            elist_remove(jobs_list, index);
+            return;
+        }
+        index++;
+    }
+}
 
