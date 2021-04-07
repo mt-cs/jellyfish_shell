@@ -25,8 +25,6 @@ void job_add(size_t list_sz, size_t item_sz);
 
 /**
  * Destroys the specified list and frees any memory that was allocated to it.
- *
- * @param list The list to destroy
  */
 void job_destroy(void);
 
