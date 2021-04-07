@@ -173,36 +173,30 @@ int key_up(int count, int key)
         key_command = hist_last_cnum() + 1;
     }
     key_command--;
-    /* Modify the command entry text: */
     const char *key_search = hist_search_cnum(key_command);
 
+    /* Modify the command entry text: */
     if (key_search != NULL) {
-        rl_replace_line(key_search, 1);
+        rl_replace_line(key_search, 1); 
     }
     
     /* Move the cursor to the end of the line: */
     rl_point = rl_end;
-    // iter
-    // TODO: step back through the history until no more history entries are
-    // left. Once the end of the history is reached, stop updating the command
-    // line.
-
     return 0;
 }
 
 int key_down(int count, int key) // not so useful, count probably 1
 {
+    if (key_command == -1) {
+        key_command = hist_last_cnum() + 1;
+    }
+    key_command++;
+    const char *key_search = hist_search_cnum(key_command);
     /* Modify the command entry text: */
-    rl_replace_line("User pressed 'down' key", 1);
-
+    if (key_search != NULL) {
+        rl_replace_line(key_search, 1); 
+    }
     /* Move the cursor to the end of the line: */
     rl_point = rl_end;
-    // iter rev
-    // TODO: step forward through the history (assuming we have stepped back
-    // previously). Going past the most recent history command blanks out the
-    // command line to allow the user to type a new command.
-
-	// Create a global variable to track KEY_COMMAND == INSERTIONS,
-    //  whenever go up --
     return 0;
 }
