@@ -37,7 +37,7 @@ int main()
 
    //printf("%d\n", hist->insertions);
     unsigned int res = hist_last_cnum();
-    printf("%d\n", res);
+    printf("%ud\n", res);
 
     
 

@@ -101,4 +101,9 @@ int key_up(int count, int key);
  */
 int key_down(int count, int key);
 
+/**
+ * Clean up command line
+ */
+void destroy_ui(void);
+
 #endif

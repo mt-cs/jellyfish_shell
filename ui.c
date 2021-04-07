@@ -16,13 +16,14 @@
 #include <pwd.h>
 
 int status_num;
-int cmd_num;
+int com_number;
 static const char *good_str = "😌";
 static const char *bad_str  = "🤮";
 
 static int readline_init(void);
 static bool scripting = false;
 static ssize_t read_sz;
+static char *line= NULL;
 
 void init_ui(void)
 {
@@ -41,8 +42,7 @@ void init_ui(void)
 
 void destroy_ui(void)
 {
-    // TODO cleanup code, if necessary
-    // free(read_sz);
+    free(line);
 }
 
 char *prompt_line(void)
@@ -50,7 +50,7 @@ char *prompt_line(void)
     const char *status = prompt_status() ? bad_str : good_str; 
     // because, conventionally, programs return 0 when they ran successfully.
     char cmd_num[25];
-    snprintf(cmd_num, 25, "%d", prompt_cmd_num());
+    snprintf(cmd_num, 25, "%ud", prompt_cmd_num());
 
     char *user = prompt_username();
     char *host = prompt_hostname();
@@ -130,19 +130,19 @@ int prompt_status(void)
 
 unsigned int prompt_cmd_num(void)
 {
-    return cmd_num;
+    return com_number;
 }
 
 char *read_command(void)
 {
 	if (scripting == false) {
-        cmd_num++;
+        com_number++;
 		char *prompt = prompt_line();
 	    char *command = readline(prompt);
 	    free(prompt);
 	    return command;
 	} else {
-        char *line= NULL;
+        //static char *line= NULL;
         size_t line_sz = 0;
         read_sz = getline(&line, &line_sz, stdin);
         //ssize_t read_sz = getline(&line, &line_sz, stdin);

@@ -56,7 +56,7 @@ ssize_t clist_add(struct clist *list, void *item) {
         return -1;
     }
     size_t idx = list->insertions % list->capacity;
-    void *ptr = list->element_storage + idx * list->item_sz;
+    void *ptr = (char *)list->element_storage + idx * list->item_sz;
     memcpy(ptr, item, list->item_sz);
     //strcpy(ptr, item);
     return list->insertions++;
@@ -68,7 +68,7 @@ void *clist_add_new(struct clist *list)
         return NULL;
     }
     int idx = list->insertions % list->capacity;
-    void *ptr = list->element_storage + idx * list->item_sz;
+    void *ptr = (char *)list->element_storage + idx * list->item_sz;
     list->insertions++;
     return ptr;
 }
@@ -80,7 +80,7 @@ void *clist_get(struct clist *list, size_t idx) {
         return NULL;
     } 
     size_t real_idx = idx % list->capacity; // mod idx
-    return list->element_storage + real_idx * list->item_sz;
+    return (char *)list->element_storage + real_idx * list->item_sz;
 }
 
 void *clist_iterate(struct clist *list, struct clist_iterator *iter) {

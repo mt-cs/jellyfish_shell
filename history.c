@@ -42,7 +42,7 @@ void hist_add(const char *cmd)
 void hist_print(void)
 {
     void *command;
-    long unsigned int index;
+    size_t index;
     iterator.idx = 0;
     while ((command = clist_iterate_rev(hist, &iterator)) != NULL) {
         if (hist->insertions < MAX_HISTORY_CAPACITY) {
