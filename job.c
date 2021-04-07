@@ -47,9 +47,9 @@ void job_remove(pid_t pid) {
     size_t index = 0;
     while ((curr_job = elist_get(jobs_list, index)) != NULL) {
         struct job * j = curr_job;
-        //LOG("checking pid %d index %lu\n", j->pid, index);
+        LOG("checking pid %d index %zu\n", j->pid, index);
         if (j->pid == pid) {
-            //LOGP("pid found in list\n");
+            LOGP("pid found in list, removing...\n");
             elist_remove(jobs_list, index);
             return;
         }

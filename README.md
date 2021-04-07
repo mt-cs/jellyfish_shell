@@ -27,16 +27,16 @@ Commands:
 ### Functions
 - <b>Basics</b>: Upon startup, Jellyfish will print its prompt and wait for user input. The shell can run commands in both the current directory (with prefix ./) and those in the PATH environment variable. If a command isn’t found, Jellyfish will print an error message. The process exit status is shown as an emoji: a smiling face for success (exit code 0) and a sick face for failure (any nonzero exit code or failure to execute the child process).
 ```bash
-[🙂]─[1]─[mtania@nemo:~/P2-mt-cs]$ ./hello
+[😊]─[1]─[mtania@nemo:~/P2-mt-cs]$ ./hello
 Hello world!
 
-[🙂]─[2]─[mtania@nemo:~/P2-mt-cs]$ ls /usr
+[😊]─[2]─[mtania@nemo:~/P2-mt-cs]$ ls /usr
 bin  include  lib  local  sbin  share  src
 
-[🙂]─[3]─[mtania@nemo:~/P2-mt-cs]$ echo hello there!
+[😊]─[3]─[mtania@nemo:~/P2-mt-cs]$ echo hello there!
 hello there!
 
-[🙂]─[4]─[mtania@nemo:~/P2-mt-cs]$ ./blah
+[😊]─[4]─[mtania@nemo:~/P2-mt-cs]$ ./blah
 jellyfish: no such file or directory: ./blah
 
 [🤮]─[5]─[mtania@nemo:~/P2-mt-cs]$ cd /this/does/not/exist
@@ -51,19 +51,19 @@ chdir: no such file or directory: /this/does/not/exist
    - Process exit status
 The current working directory format: if the CWD is the user’s home directory, then the entire path is replaced with ~. Subdirectories under the home directory are prefixed with ~; if I am in /home/mtania/test, the prompt will show ~/test:
 ```bash
-[🙂]─[6]─[mtania@nemo:~]$ whoami
+[😊]─[6]─[mtania@nemo:~]$ whoami
 mtania
 
-[🙂]─[7]─[mtania@nemo:~]$ cd P2-mt-cs
+[😊]─[7]─[mtania@nemo:~]$ cd P2-mt-cs
 
 # Create a directory with our full home directory in its path:
 # **Must use the username outputted above from whoami)**
-[🙂]─[8]─[mtania@nemo:~/P2-mt-cs]$ mkdir -p /tmp/home/mtania/test
+[😊]─[8]─[mtania@nemo:~/P2-mt-cs]$ mkdir -p /tmp/home/mtania/test
 
-[🙂]─[9]─[mtania@nemo:~/P2-mt-cs]$ cd /tmp/home/mtania/test
+[😊]─[9]─[mtania@nemo:~/P2-mt-cs]$ cd /tmp/home/mtania/test
 
 # Note that the FULL path is shown here (no ~):
-[🙂]─[10]─[mtania@nemo:/tmp/home/mtania/test]$ pwd
+[😊]─[10]─[mtania@nemo:/tmp/home/mtania/test]$ pwd
 /tmp/home/mtania/test
 ```
 - <b>Scripting</b>: Support scripting mode to run the test cases. Scripting mode reads commands from standard input and executes them without showing the prompt.
@@ -84,20 +84,20 @@ hi
 ```
 - <b>Signal Handling</b>: Handle the user pressing Ctrl+C and making sure ^C doesn’t terminate the shell. 
 ```bash
-[🙂]─[11]─[mtania@nemo:~]$ hi there oh wait nevermind^C
+[😊]─[11]─[mtania@nemo:~]$ hi there oh wait nevermind^C
 
-[🙂]─[11]─[mtania@nemo:~]$ ^C
+[😊]─[11]─[mtania@nemo:~]$ ^C
 
-[🙂]─[11]─[mtania@nemo:~]$ ^C
+[😊]─[11]─[mtania@nemo:~]$ ^C
 
-[🙂]─[11]─[mtania@nemo:~]$ sleep 100
+[😊]─[11]─[mtania@nemo:~]$ sleep 100
 ^C
 
 [🤮]─[12]─[mtania@nemo:~]$ sleep 5
 ```
 - <b>History</b>: In the demo below, the user has entered 142 commands. Only the last 100 are kept, so the list starts at command 43. Blank command would not be shown in the history or increment the command counter. The entire, original command line string is shown in the history – not a tokenized or modified string.
 ```bash
-[🙂]─[142]─[mtania@nemo:~]$ history
+[😊]─[142]─[mtania@nemo:~]$ history
   43 ls -l
   43 top
   44 echo "hi" # This prints out 'hi'
@@ -112,24 +112,24 @@ hi
 - <b>I/O Redirection</b>: Support file input/output redirection.
 ```bash
 # Create/overwrite 'my_file.txt' and redirect the output of echo there:
-[🙂]─[14]─[mtania@nemo:~]$ echo "hello world!" > my_file.txt
-[🙂]─[15]─[mtania@nemo:~]$ cat my_file.txt
+[😊]─[14]─[mtania@nemo:~]$ echo "hello world!" > my_file.txt
+[😊]─[15]─[mtania@nemo:~]$ cat my_file.txt
 hello world!
 
 # Append text with '>>':
-[🙂]─[16]─[mtania@nemo:~]$ echo "hello world!" >> my_file.txt
-[🙂]─[17]─[mtania@nemo:~]$ cat my_file.txt
+[😊]─[16]─[mtania@nemo:~]$ echo "hello world!" >> my_file.txt
+[😊]─[17]─[mtania@nemo:~]$ cat my_file.txt
 hello world!
 hello world!
 
 # Let's sort the /etc/passwd file via input redirection:
-[🙂]─[18]─[mtania@nemo:~]$ sort < /etc/passwd > sorted_pwd.txt
+[😊]─[18]─[mtania@nemo:~]$ sort < /etc/passwd > sorted_pwd.txt
 
 # Order of < and > don't matter:
-[🙂]─[19]─[mtania@nemo:~]$ sort > sorted_pwd.txt < /etc/passwd
+[😊]─[19]─[mtania@nemo:~]$ sort > sorted_pwd.txt < /etc/passwd
 
 # Here's input redirection by itself (not redirecting to a file):
-[🙂]─[20]─[mtania@nemo:~]$ sort < sorted_pwd.txt
+[😊]─[20]─[mtania@nemo:~]$ sort < sorted_pwd.txt
 (sorted contents shown)
 ```
 - <b>Background Jobs</b>: If a command ends in &, it will run in the background without waiting for the command to finish before prompting for the next command. If user enter jobs, Jellyfish shell will print out a list of currently-running backgrounded processes (the original command line as it was entered, including the & character). The status of background jobs is not shown in the prompt.

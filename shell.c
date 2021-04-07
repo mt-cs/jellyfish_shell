@@ -21,18 +21,21 @@
 #include "elist.h"
 #include "util.h"
 #include "job.h"
+
 /*
- * Function Declarations for builtin shell commands:
+ * Function Declarations for builtin shell commands
  */
-void jellyfish_cd(struct elist *list);
+
 bool jellyfish_built_in(struct elist *list);
+int jellyfish_io(int index, char **args, bool append, bool write, bool read);
+void jellyfish_run_io(struct elist *list, char **args);
+void jellyfish_cd(struct elist *list);
 void jellyfish_execute(struct elist *list);
 void jellyfish_process_command(char *command, struct elist *list, bool repeat);
 void jellyfish_history_execution(struct elist *list, char **comm);
 void jellyfish_history();
 void jellyfish_exit();
 void jellyfish_jobs();
-int jellyfish_io(int index, char **args, bool append, bool write, bool read);
 
 void jellyfish_history() {
     LOGP("history...\n");
@@ -151,6 +154,38 @@ int jellyfish_io(int index, char **args, bool append, bool write, bool read) {
     return 0;    
 }
 
+void jellyfish_run_io(struct elist *list, char **args) {
+    ssize_t index;
+
+    for (int i = 0; i < elist_size(list) - 1; ++i) {
+        bool write = false;
+        bool read = false;
+        bool append = false;
+        if (strcmp(args[i], ">") == 0) 
+        {
+            index = i;
+            write = true;
+            jellyfish_io(index, args, append, write, read);
+            LOGP ("we are in >\n");
+        } 
+        else if (strcmp(args[i], "<") == 0) 
+        {
+            index = i;
+            read = true;
+            jellyfish_io(index, args, append, write, read);
+            LOGP ("we are in <\n");
+        } 
+        else if (strcmp(args[i], ">>") == 0) 
+        {
+            index = i;
+            append = true;
+            jellyfish_io(index, args, append, write, read);
+            LOGP ("we are in >>\n");
+        } 
+    } 
+
+}
+
 void jellyfish_execute(struct elist *list) {
     char **args = elist_get(list, 0);
     pid_t child = fork();
@@ -160,46 +195,13 @@ void jellyfish_execute(struct elist *list) {
     } 
     else if (child == 0) 
     {
-        //child
-
-        //if background task, remove the &
+        /* I am the child */
         char* last_token = args[elist_size(list) - 2];
         if (last_token[strlen(last_token) - 1] == '&') {
             LOGP("GETTING BACKGROUND JOB IN CHILD\n");
-            //last_token[strlen(last_token) - 1] = '\0';
             elist_remove(list, elist_size(list)-2);
         }
-
-
-        ssize_t index;
-
-        for (int i = 0; i < elist_size(list) - 1; ++i) {
-            bool write = false;
-            bool read = false;
-            bool append = false;
-            if (strcmp(args[i], ">") == 0) 
-            {
-                index = i;
-                write = true;
-                jellyfish_io(index, args, append, write, read);
-                LOGP ("we are in >\n");
-            } 
-            else if (strcmp(args[i], "<") == 0) 
-            {
-                index = i;
-                read = true;
-                jellyfish_io(index, args, append, write, read);
-                LOGP ("we are in <\n");
-            } 
-            else if (strcmp(args[i], ">>") == 0) 
-            {
-                index = i;
-                append = true;
-                jellyfish_io(index, args, append, write, read);
-                LOGP ("we are in >>\n");
-            } 
-        } 
-        //LOG("Args of 0 %s", args[0]);  
+        jellyfish_run_io(list, args);  
         if(execvp(args[0], args) == -1) {
             perror("execvp"); 
             close(fileno(stdin));
@@ -212,12 +214,12 @@ void jellyfish_execute(struct elist *list) {
     } 
     else 
     {
-        //parent
+        /* I am the parent */
         int status; //synchronize the processes
         char* last_token = args[elist_size(list) - 2];
         LOG("Last token is %s\n", last_token);
         if (last_token[strlen(last_token) - 1] == '&') {
-            //background
+            /* Background */
             LOGP("GETTING BACKGROUND JOB IN PARENT\n");
             struct job job_new;
             job_new.pid = child;
@@ -228,14 +230,10 @@ void jellyfish_execute(struct elist *list) {
                 strcat(job_new.command, args[i]);
                 strcat(job_new.command, " ");
             }
-
             job_add(job_new);
         } else {
-            //foreground
+            /* Foreground */
             int finished_pid = waitpid(child, &status, 0); 
-            
-            //if mistakenly we intercept the end of a backrgound child, remove it
-            //job_remove(finished_pid);
             set_status(status);
             LOG("Child finished executing: %d, pid %d\n", status, finished_pid);
         }

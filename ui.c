@@ -17,7 +17,7 @@
 
 int status_num;
 int com_number;
-static const char *good_str = "😌";
+static const char *good_str = "😊";
 static const char *bad_str  = "🤮";
 
 static int readline_init(void);
@@ -48,8 +48,7 @@ void destroy_ui(void)
 
 char *prompt_line(void)
 {
-    const char *status = prompt_status() ? bad_str : good_str; 
-    // because, conventionally, programs return 0 when they ran successfully.
+    const char *status = prompt_status() ? bad_str : good_str;
     char cmd_num[25];
     snprintf(cmd_num, 25, "%d", prompt_cmd_num());
 
@@ -107,12 +106,12 @@ char *prompt_cwd(void)
     cwd = getcwd(NULL, 0);
     struct passwd *pw = getpwuid(getuid());
     const char *homedir = pw->pw_dir;
-    //LOG("Current user dir: %s\n", homedir);
+    LOG("Current user dir: %s\n", homedir);
     
     if (strncmp(homedir, cwd, strlen(homedir)) == 0) {
         char *new_cwd = cwd + strlen(homedir) - 1;
         new_cwd[0] = '~';
-        //LOG("New cwd: %s\n", new_cwd);
+        LOG("New cwd: %s\n", new_cwd);
         return new_cwd; 
     }
     return cwd; 
@@ -144,10 +143,8 @@ char *read_command(void)
 	    free(prompt);
 	    return command;
 	} else {
-        //static char *line= NULL;
         static size_t line_sz = 0;
         read_sz = getline(&line, &line_sz, stdin);
-        //ssize_t read_sz = getline(&line, &line_sz, stdin);
         if (read_sz == -1) {
             perror("getline");
             return NULL;
@@ -185,7 +182,7 @@ int key_up(int count, int key)
     return 0;
 }
 
-int key_down(int count, int key) // not so useful, count probably 1
+int key_down(int count, int key)
 {
     if (key_command == -1) {
         key_command = hist_last_cnum() + 1;

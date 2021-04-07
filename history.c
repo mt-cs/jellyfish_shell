@@ -10,7 +10,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-
 #include "logger.h"
 
 #define MAX_COMMAND_LENGTH (256)

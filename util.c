@@ -50,12 +50,7 @@ char *next_token(char **str_ptr, const char *delim)
 
 void sigint_handler(int signo) {
     /*
-     * making sure ^C doesn’t terminate your shell. 
-     * To make the output look like the example above, 
-     * in your signal handler you can 
-     * (1) print a newline character, 
-     * (2) print the prompt only if no command is currently executing, and 
-     * (3) fflush(stdout).
+     * (2) print the prompt only if no command is currently executing ?
      */
     printf("\n");
     printf("Goodbye 👋 🙃!\n");
