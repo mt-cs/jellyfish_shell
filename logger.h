@@ -16,7 +16,7 @@
  * If LOGGER is not set, it will be enabled by default.
  */
 #ifndef LOGGER
-#define LOGGER 0
+#define LOGGER 1
 #endif
 
 /**

@@ -2,7 +2,7 @@
 bin=jellyfish
 
 # Set the following to '0' to disable log messages:
-LOGGER ?= 1
+LOGGER ?= 0
 
 # Compiler/linker flags
 CFLAGS += -g -Wall -fPIC -DLOGGER=$(LOGGER)
@@ -24,7 +24,7 @@ shell.o: shell.c history.h logger.h ui.h util.h job.h
 history.o: history.c history.h logger.h clist.h
 ui.o: ui.h ui.c logger.h history.h
 util.o: util.h logger.h
-clist.o: clist.c logger.h
+clist.o: clist.h logger.h
 job.o: job.h logger.h
 
 clean:

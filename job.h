@@ -16,25 +16,31 @@ struct job
 };
 
 /**
- * Initializes the job list; sets up elist data structures
+ * Initializes the job list; sets up elist data structures.
  */
 void job_init();
 
 /**
- * Creates a new elist data structure. If the initial size is set to 0, the
- * default capacity will be used. 
+ * Add job struct to an elist data structure.
  *
- * @param type element to be added
+ * @param job_struct element to be added
  */
 void job_add(struct job job_struct);
 
 /**
- * Destroys the specified list and frees any memory that was allocated to it.
+ * Destroys the specified job list and frees any memory that was allocated to it.
  */
 void job_destroy(void);
 
+/**
+ * Print jobs in list
+ */
 void job_print(void);
 
+/**
+ *  Remove a particular job in list
+ *  @param pid pis_t id of the job to be removed
+ */
 void job_remove(pid_t pid);
 
 #endif
