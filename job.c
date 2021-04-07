@@ -29,6 +29,7 @@ A signal handler for SIGCHLD. This signal is sent to a process any time one of i
 A non-blocking call to waitpid in your signal handler. Pass in pid = -1 and options = WNOHANG.
 This tells your signal handler the PID of the child process that exited. 
 If the PID is in your jobs list, then it can be removed.
+
 The difference between a background job and a regular job is simply whether 
 or not a blocking call to waitpid() is performed. 
 If you do a standard waitpid() with options = 0, then the job will run in the foreground 
@@ -38,18 +39,26 @@ Otherwise, the process will run and the shell will prompt for the next command w
 NOTE: your shell prompt output may print in the wrong place when using background jobs. This is completely normal. 
  */
 
-struct elist *jobs;
+struct elist *jobs_list;
 
-void job_init() {
-    jobs = elist_create(0, sizeof(char **));
+void job_init() 
+{
+    jobs_list = elist_create(0, sizeof(struct job));
 }
 
-void job_add(size_t list_sz, size_t item_sz) {
-    elist_create(list_sz, item_sz);
+void job_add(struct job job_struct) 
+{
+    elist_add(jobs_list, &job_struct);
 }
 
 void job_destroy(void)
 {
-    elist_destroy(jobs);
+    elist_destroy(jobs_list);
 }
+
+void job_print(void) {
+    
+}
+
+void job_remove(pid_t pid);
 

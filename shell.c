@@ -22,7 +22,7 @@
 #include "util.h"
 #include "job.h"
 /*
-  Function Declarations for builtin shell commands:
+ * Function Declarations for builtin shell commands:
  */
 void jellyfish_cd(struct elist *list);
 bool jellyfish_built_in(struct elist *list);
@@ -31,7 +31,7 @@ void jellyfish_process_command(char *command, struct elist *list, bool repeat);
 void jellyfish_history_execution(struct elist *list, char **comm);
 void jellyfish_history();
 void jellyfish_exit();
-int jellyfish_jobs(char **args);
+int jellyfish_jobs(struct elist *job_list);
 int jellyfish_io(int index, char **args, bool append, bool write, bool read);
 
 void jellyfish_history() {
@@ -80,7 +80,11 @@ void jellyfish_history_execution(struct elist *list, char **comm) {
     }
 }
 
-int jellyfish_jobs(char **args) {
+int jellyfish_jobs(struct elist *job_list) {
+    //for(int i = 0; i < elist_size(job_list); i++) {
+        //struct Job *back_job = elist_get(job_list, i);
+        //printf("%s\n", back_job->command);
+    //}
     return 0;
 }
 
@@ -152,7 +156,6 @@ int jellyfish_io(int index, char **args, bool append, bool write, bool read) {
 }
 
 void jellyfish_execute(struct elist *list) {
-    // 5. fork a child process
     pid_t child = fork();
     if (child == -1) 
     {
@@ -208,11 +211,9 @@ void jellyfish_execute(struct elist *list) {
 }
 
 bool jellyfish_built_in(struct elist *list) {
-    // 3. check for built-in functions
     char **comm = elist_get(list, 0);
     if (comm[0] == NULL )
     {
-        //continue;
         return true;
     }
     if (!strcmp(*comm, "cd"))

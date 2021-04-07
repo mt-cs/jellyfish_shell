@@ -24,6 +24,7 @@ static int readline_init(void);
 static bool scripting = false;
 static ssize_t read_sz;
 static char *line= NULL;
+static unsigned int key_command;
 
 void init_ui(void)
 {
@@ -167,8 +168,11 @@ int readline_init(void)
 
 int key_up(int count, int key)
 {
+    key_command = hist_last_cnum();
+    key_command--;
     /* Modify the command entry text: */
-    char *command_key = "User pressed 'up' key";
+    const char *key_search = hist_search_cnum(key_command);
+    char *command_key = strdup(key_search);
     rl_replace_line(command_key, 1);
 
     /* Move the cursor to the end of the line: */
@@ -177,12 +181,15 @@ int key_up(int count, int key)
     // TODO: step back through the history until no more history entries are
     // left. Once the end of the history is reached, stop updating the command
     // line.
+    free(command_key);
+    
 
     return 0;
 }
 
 int key_down(int count, int key) // not so useful, count probably 1
 {
+    key_command = hist_last_cnum() - 1;
     /* Modify the command entry text: */
     rl_replace_line("User pressed 'down' key", 1);
 
@@ -193,6 +200,8 @@ int key_down(int count, int key) // not so useful, count probably 1
     // previously). Going past the most recent history command blanks out the
     // command line to allow the user to type a new command.
 
-	// Create a global variable to track
+	// Create a global variable to track KEY_COMMAND == INSERTIONS,
+    //  whenever go up --
+    key_command++;
     return 0;
 }

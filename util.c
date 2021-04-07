@@ -67,6 +67,6 @@ void child_signal_handler(int signo) {
     // get the return
     // that's the child
     // loop through find the job number
-    int job_num = waitpid(-1, NULL, WNOHANG) > 0;
-    LOG("Job num is: %d\n", job_num);
+    pid_t wait_pid = waitpid(-1, NULL, WNOHANG) > 0;
+    LOG("Job num is: %ld\n", (long)job_num);
 }

@@ -9,8 +9,14 @@
 
 #include <sys/types.h>
 
+struct job
+{
+    pid_t pid;
+    char command[256];
+};
+
 /**
- * Initializes the job; sets up elist data structures
+ * Initializes the job list; sets up elist data structures
  */
 void job_init();
 
@@ -18,14 +24,17 @@ void job_init();
  * Creates a new elist data structure. If the initial size is set to 0, the
  * default capacity will be used. 
  *
- * @param init_capacity The initial capacity of the list
- * @param item_sz Size of the elements that will be stored in the list (in bytes)
+ * @param type element to be added
  */
-void job_add(size_t list_sz, size_t item_sz);
+void job_add(struct job job_struct);
 
 /**
  * Destroys the specified list and frees any memory that was allocated to it.
  */
 void job_destroy(void);
+
+void job_print(void);
+
+void job_remove(pid_t pid);
 
 #endif
