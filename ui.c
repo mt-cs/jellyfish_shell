@@ -136,6 +136,7 @@ int prompt_cmd_num(void)
 
 char *read_command(void)
 {
+    key_command = - 1;
 	if (scripting == false) {
         com_number++;
 		char *prompt = prompt_line();
@@ -168,28 +169,29 @@ int readline_init(void)
 
 int key_up(int count, int key)
 {
-    key_command = hist_last_cnum();
+    if (key_command == -1) {
+        key_command = hist_last_cnum() + 1;
+    }
     key_command--;
     /* Modify the command entry text: */
     const char *key_search = hist_search_cnum(key_command);
-    char *command_key = strdup(key_search);
-    rl_replace_line(command_key, 1);
 
+    if (key_search != NULL) {
+        rl_replace_line(key_search, 1);
+    }
+    
     /* Move the cursor to the end of the line: */
     rl_point = rl_end;
     // iter
     // TODO: step back through the history until no more history entries are
     // left. Once the end of the history is reached, stop updating the command
     // line.
-    free(command_key);
-    
 
     return 0;
 }
 
 int key_down(int count, int key) // not so useful, count probably 1
 {
-    key_command = hist_last_cnum() - 1;
     /* Modify the command entry text: */
     rl_replace_line("User pressed 'down' key", 1);
 
@@ -202,6 +204,5 @@ int key_down(int count, int key) // not so useful, count probably 1
 
 	// Create a global variable to track KEY_COMMAND == INSERTIONS,
     //  whenever go up --
-    key_command++;
     return 0;
 }
