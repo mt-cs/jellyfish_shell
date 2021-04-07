@@ -51,8 +51,8 @@ chdir: no such file or directory: /this/does/not/exist
    - Process exit status
 The current working directory format: if the CWD is the user’s home directory, then the entire path is replaced with ~. Subdirectories under the home directory are prefixed with ~; if I am in /home/mtania/test, the prompt will show ~/test:
 ```bash
-[🙂]─[6]─[mmalensek@gamestop:~]$ whoami
-mmalensek
+[🙂]─[6]─[mtania@nemo:~]$ whoami
+mtania
 
 [🙂]─[7]─[mtania@nemo:~]$ cd P2-mt-cs
 
