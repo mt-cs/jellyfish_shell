@@ -37,7 +37,7 @@ bin  include  lib  local  sbin  share  src
 hello there!
 
 [🙂]─[4]─[mtania@nemo:~/P2-mt-cs]$ ./blah
-crash: no such file or directory: ./blah
+jellyfish: no such file or directory: ./blah
 
 [🤮]─[5]─[mtania@nemo:~/P2-mt-cs]$ cd /this/does/not/exist
 chdir: no such file or directory: /this/does/not/exist
@@ -68,7 +68,7 @@ mmalensek
 ```
 - <b>Scripting</b>: Support scripting mode to run the test cases. Scripting mode reads commands from standard input and executes them without showing the prompt.
 ```bash
-cat <<EOM | ./crash
+cat <<EOM | ./jellyfish
 ls /
 echo "hi"
 exit
@@ -79,7 +79,7 @@ bin  boot  dev  etc  home  lib  lost+found  mnt  opt  proc  root  run  sbin  srv
 hi
 
 # Another option (assuming commands.txt contains shell commands):
-./crash < commands.txt
+./jellyfish < commands.txt
 (commands are executed line by line)
 ```
 - <b>Signal Handling</b>: Handle the user pressing Ctrl+C and making sure ^C doesn’t terminate the shell. 
@@ -105,7 +105,7 @@ hi
 ... (commands removed for brevity) ...
 
  140 ls /bin
- 141 gcc -g crash.c
+ 141 gcc -g jellyfish.c
  142 history
 
 ```
