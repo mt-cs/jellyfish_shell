@@ -102,7 +102,7 @@ int key_up(int count, int key);
 int key_down(int count, int key);
 
 /**
- * Clean up command line
+ * Clean up command line by calling free
  */
 void destroy_ui(void);
 

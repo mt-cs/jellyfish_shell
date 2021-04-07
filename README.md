@@ -142,8 +142,11 @@ There are several files included. These are:
    - <b>shell.c</b>: The program driver.
    - <b>history.c</b>: Contains shell history data structures and retrieval functions.
    - <b>ui.c</b>: Text-based UI functionality, primarily concerned with interacting with the readline library.
+   - <b>util.c</b>: Util to tokenize the command input.
+   - <b>job.c</b>: Background jobs functionality.
+   - <b>signal.c</b>: Signal functionality.
    - <b>logger.h</b>: Helps facilitate debugging by providing basic logging functionality. 
-There are also header files history.h and ui.h.
+There are also header files util.h, jobs.h, signal.h history.h and ui.h.
 
 
 To compile and run:

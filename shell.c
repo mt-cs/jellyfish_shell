@@ -21,6 +21,7 @@
 #include "elist.h"
 #include "util.h"
 #include "job.h"
+#include "signal.h"
 
 /*
  * Function Declarations for builtin shell commands
@@ -75,8 +76,7 @@ void jellyfish_history_execution(struct elist *list, char **comm) {
     if (hist_search != NULL)
     {
         char *hist_dup = strdup(hist_search);
-        bool repeat = true;
-        jellyfish_process_command(hist_dup, list, repeat);
+        jellyfish_process_command(hist_dup, list, true);
     }
     else {
         LOGP("Repeat command not found :(\n");
@@ -84,6 +84,7 @@ void jellyfish_history_execution(struct elist *list, char **comm) {
 }
 
 void jellyfish_jobs() {
+    LOGP("background jobs...\n");
     job_print();
 }   
 
@@ -183,7 +184,6 @@ void jellyfish_run_io(struct elist *list, char **args) {
             LOGP ("we are in >>\n");
         } 
     } 
-
 }
 
 void jellyfish_execute(struct elist *list) {
@@ -199,7 +199,7 @@ void jellyfish_execute(struct elist *list) {
         char* last_token = args[elist_size(list) - 2];
         if (last_token[strlen(last_token) - 1] == '&') {
             LOGP("GETTING BACKGROUND JOB IN CHILD\n");
-            elist_remove(list, elist_size(list)-2);
+            elist_remove(list, elist_size(list) - 2);
         }
         jellyfish_run_io(list, args);  
         if(execvp(args[0], args) == -1) {
@@ -215,7 +215,7 @@ void jellyfish_execute(struct elist *list) {
     else 
     {
         /* I am the parent */
-        int status; //synchronize the processes
+        int status; 
         char* last_token = args[elist_size(list) - 2];
         LOG("Last token is %s\n", last_token);
         if (last_token[strlen(last_token) - 1] == '&') {
@@ -237,7 +237,6 @@ void jellyfish_execute(struct elist *list) {
             set_status(status);
             LOG("Child finished executing: %d, pid %d\n", status, finished_pid);
         }
-        
     }
 }
 
@@ -268,7 +267,6 @@ bool jellyfish_built_in(struct elist *list) {
         return true;
     }
     else if (!strcmp(*comm, "jobs")){
-        LOGP("background\n");
         jellyfish_jobs();
         return true;
     }
@@ -282,7 +280,7 @@ void jellyfish_process_command(char *command, struct elist *list, bool repeat) {
         hist_add(command);
         LOG("Adding into history %s\n", command);
     }
-    
+
     char *next_tok = command;
     char *curr_tok;
 
