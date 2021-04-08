@@ -145,8 +145,10 @@ There are several files included. These are:
    - <b>util.c</b>: Util to tokenize the command input.
    - <b>job.c</b>: Background jobs functionality.
    - <b>signal.c</b>: Signal functionality.
+   - <b>clist.c</b>: Circular list data structure to store the history.
+   - <b>elist.h</b>: Elastic list data structure built from scratch.
    - <b>logger.h</b>: Helps facilitate debugging by providing basic logging functionality. 
-There are also header files util.h, jobs.h, signal.h history.h and ui.h.
+There are also header files util.h, jobs.h, signal.h, history.h, clist.h and ui.h.
 
 
 To compile and run:
