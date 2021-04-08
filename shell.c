@@ -301,7 +301,6 @@ void jellyfish_process_command(char *command, struct elist *list, bool repeat) {
     if (elist_size(list) == 1)
     {
         LOGP("Empty command\n");
-
         return;
     } 
     bool built_in = jellyfish_built_in(list);

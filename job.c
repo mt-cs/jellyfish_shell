@@ -32,12 +32,12 @@ void job_destroy(void)
 }
 
 void job_print(void) {
-    void *a;
+    void *curr_job;
     size_t index = 0;
     
-    while ((a = elist_get(jobs_list, index)) != NULL) {
-        struct job * j = a;
-        printf("%s\n", j->command);
+    while ((curr_job = elist_get(jobs_list, index)) != NULL) {
+        struct job *jobs = curr_job;
+        printf("%s\n", jobs->command);
         index++;
     }
 }
@@ -46,9 +46,9 @@ void job_remove(pid_t pid) {
     void *curr_job;
     size_t index = 0;
     while ((curr_job = elist_get(jobs_list, index)) != NULL) {
-        struct job * j = curr_job;
-        LOG("checking pid %d index %zu\n", j->pid, index);
-        if (j->pid == pid) {
+        struct job *jobs = curr_job;
+        LOG("checking pid %d index %zu\n", jobs->pid, index);
+        if (jobs->pid == pid) {
             LOGP("pid found in list, removing...\n");
             elist_remove(jobs_list, index);
             return;
