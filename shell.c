@@ -22,10 +22,7 @@
 #include "util.h"
 #include "job.h"
 #include "signal.h"
-
-/*
- * Function Declarations for builtin shell commands
- */
+#include "shell.h"
 
 bool jellyfish_built_in(struct elist *list);
 int jellyfish_io(int index, char **args, bool append, bool write, bool read);
@@ -38,6 +35,12 @@ void jellyfish_history();
 void jellyfish_exit();
 void jellyfish_jobs();
 
+static bool process_running;
+
+bool jellyfish_process_running() {
+    return process_running;
+}
+
 void jellyfish_history() {
     LOGP("history...\n");
     hist_print();
@@ -45,7 +48,7 @@ void jellyfish_history() {
 }
 
 void jellyfish_exit(){
-    LOGP("exit...\n");
+    fprintf(stderr, "Goodbye 👋 🙃!\n");
     exit(0);
 }
 
@@ -187,6 +190,7 @@ void jellyfish_run_io(struct elist *list, char **args) {
 }
 
 void jellyfish_execute(struct elist *list) {
+    process_running = true;
     char **args = elist_get(list, 0);
     pid_t child = fork();
     if (child == -1) 
@@ -235,6 +239,7 @@ void jellyfish_execute(struct elist *list) {
             /* Foreground */
             int finished_pid = waitpid(child, &status, 0); 
             set_status(status);
+            process_running = false;
             LOG("Child finished executing: %d, pid %d\n", status, finished_pid);
         }
     }
@@ -320,7 +325,7 @@ int main(void)
     job_init();
     struct elist *list = elist_create(0, sizeof(char **));
 
-    signal(SIGINT, SIG_IGN);
+    signal(SIGINT, sigint_handler);
     signal(SIGCHLD, child_signal_handler);
     while (true) {
         char *command = read_command();

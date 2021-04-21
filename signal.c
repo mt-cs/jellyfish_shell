@@ -7,18 +7,23 @@
 #include <wait.h>
 #include <signal.h>
 #include <sys/types.h>
+#include <readline/readline.h>
 
+#include "shell.h"
 #include "logger.h"
 #include "job.h"
 
 void sigint_handler(int signo) {
-    /*
-     * (2) print the prompt only if no command is currently executing ?
-     */
-    printf("\n");
-    printf("Goodbye 👋 🙃!\n");
-    fflush(stdout);
-    exit(0);
+    if (isatty(STDIN_FILENO)) {
+        printf("\n");
+        if(jellyfish_process_running()) {
+            rl_replace_line("", 1);
+        } else {
+            rl_on_new_line();
+            rl_replace_line("", 1);
+            rl_redisplay();
+        }
+    }
 }
 
 void child_signal_handler(int signo) {
