@@ -172,5 +172,4 @@ make test run=4
 make test run='4 8 12'
 ```
 
-See: https://www.cs.usfca.edu/~mmalensek/cs521/assignments/project-2.html
 
